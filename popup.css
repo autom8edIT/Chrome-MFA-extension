@@ -167,3 +167,14 @@ input[type="text"]:focus {
   text-align: center;
   font-size: 14px;
 }
+
+.error-message {
+  background: #fed7d7;
+  border: 1px solid #fc8181;
+  color: #742a2a;
+  padding: 10px;
+  border-radius: 4px;
+  margin-bottom: 12px;
+  text-align: center;
+  font-size: 14px;
+}

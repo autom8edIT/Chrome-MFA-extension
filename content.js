@@ -124,6 +124,11 @@
   
   // Function to show notification
   function showNotification(message) {
+    if (!document.body) {
+      console.log('Cannot show notification: document.body is null');
+      return;
+    }
+    
     const notification = document.createElement('div');
     notification.style.cssText = `
       position: fixed;
@@ -188,20 +193,24 @@
   }
   
   // Also watch for dynamically added inputs
-  const observer = new MutationObserver((mutations) => {
-    for (const mutation of mutations) {
-      if (mutation.addedNodes.length > 0) {
-        const inputs = findMFAInputs();
-        if (inputs.length > 0) {
-          attemptAutoInjection();
-          break;
+  if (document.body) {
+    const observer = new MutationObserver((mutations) => {
+      for (const mutation of mutations) {
+        if (mutation.addedNodes.length > 0) {
+          const inputs = findMFAInputs();
+          if (inputs.length > 0) {
+            attemptAutoInjection();
+            break;
+          }
         }
       }
-    }
-  });
-  
-  observer.observe(document.body, {
-    childList: true,
-    subtree: true
-  });
+    });
+    
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true
+    });
+  } else {
+    console.log('Cannot observe mutations: document.body is null');
+  }
 })();

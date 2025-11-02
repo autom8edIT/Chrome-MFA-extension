@@ -62,7 +62,7 @@ document.getElementById('addCodeForm').addEventListener('submit', function(e) {
   const selector = document.getElementById('selector').value.trim();
   
   if (!siteName || !siteUrl || !mfaCode) {
-    alert('Please fill in all required fields');
+    showErrorMessage('Please fill in all required fields');
     return;
   }
   
@@ -129,6 +129,25 @@ function showSuccessMessage(message) {
   
   const messageDiv = document.createElement('div');
   messageDiv.className = 'success-message';
+  messageDiv.textContent = message;
+  
+  const firstSection = document.querySelector('.section');
+  firstSection.insertBefore(messageDiv, firstSection.firstChild);
+  
+  setTimeout(() => {
+    messageDiv.remove();
+  }, 3000);
+}
+
+// Show error message
+function showErrorMessage(message) {
+  const existingMessage = document.querySelector('.error-message');
+  if (existingMessage) {
+    existingMessage.remove();
+  }
+  
+  const messageDiv = document.createElement('div');
+  messageDiv.className = 'error-message';
   messageDiv.textContent = message;
   
   const firstSection = document.querySelector('.section');
