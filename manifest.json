@@ -1,0 +1,30 @@
+{
+  "manifest_version": 3,
+  "name": "Autom8ed TOTP Injector v3.0.6r3",
+  "version": "3.0.6",
+  "description": "Reliable 2FA injector. Auto-inject, delayed click + TOTP overwrite to defeat field resets.",
+  "permissions": ["scripting", "tabs"],
+  "host_permissions": ["<all_urls>"],
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["injector.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "icons": {
+    "16": "icon16.png",
+    "32": "icon32.png",
+    "48": "icon48.png",
+    "64": "icon64.png",
+    "128": "icon128.png"
+  },
+  "action": {
+    "default_icon": {
+      "16": "icon16.png",
+      "32": "icon32.png",
+      "48": "icon48.png"
+    },
+    "default_popup": "popup.html"
+  }
+}

@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Autom8ed TOTP</title>
+    <style>
+      body {
+        background-color: #1e1e1e;
+        color: #f0f0f0;
+        font-family: sans-serif;
+        padding: 10px;
+        margin: 0;
+      }
+      h3 {
+        margin-top: 0;
+      }
+      button {
+        background-color: #333;
+        color: #fff;
+        border: 1px solid #555;
+        padding: 8px 12px;
+        margin-bottom: 10px;
+        border-radius: 6px;
+        width: 100%;
+        cursor: pointer;
+        transition: all 0.2s ease-in-out;
+      }
+      button:hover {
+        background-color: #444;
+        border-color: #888;
+      }
+    </style>
+    <script src="popup.js" defer></script>
+  </head>
+  <body>
+    <h3>Inject TOTP Code</h3>
+    <button id="defaultBtn">SSO Login</button><br/>
+    <button id="o365Btn">O365</button><br/>
+    <button id="pwBtn">PasswordState</button>
+  </body>
+</html>
