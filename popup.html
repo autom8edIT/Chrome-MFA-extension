@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MFA Code Auto-Injector</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="container">
+    <h1>MFA Code Auto-Injector</h1>
+    
+    <div class="section">
+      <h2>Add New MFA Code</h2>
+      <form id="addCodeForm">
+        <div class="form-group">
+          <label for="siteName">Site Name:</label>
+          <input type="text" id="siteName" placeholder="e.g., GitHub" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="siteUrl">Site URL Pattern:</label>
+          <input type="text" id="siteUrl" placeholder="e.g., github.com" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="mfaCode">MFA Code:</label>
+          <input type="text" id="mfaCode" placeholder="6-digit code" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="selector">Input Selector (optional):</label>
+          <input type="text" id="selector" placeholder="e.g., #mfa-input">
+        </div>
+        
+        <button type="submit" class="btn btn-primary">Add Code</button>
+      </form>
+    </div>
+    
+    <div class="section">
+      <h2>Saved MFA Codes</h2>
+      <div id="savedCodes" class="saved-codes">
+        <p class="empty-message">No saved codes yet.</p>
+      </div>
+    </div>
+    
+    <div class="section">
+      <button id="clearAll" class="btn btn-danger">Clear All Codes</button>
+    </div>
+  </div>
+  
+  <script src="popup.js"></script>
+</body>
+</html>

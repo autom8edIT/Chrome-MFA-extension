@@ -1,0 +1,169 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-width: 400px;
+  max-width: 500px;
+}
+
+.container {
+  padding: 20px;
+}
+
+h1 {
+  color: white;
+  font-size: 24px;
+  margin-bottom: 20px;
+  text-align: center;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+h2 {
+  color: white;
+  font-size: 18px;
+  margin-bottom: 12px;
+}
+
+.section {
+  background: white;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 16px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.form-group {
+  margin-bottom: 12px;
+}
+
+label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 4px;
+}
+
+input[type="text"] {
+  width: 100%;
+  padding: 8px 12px;
+  border: 2px solid #e0e0e0;
+  border-radius: 4px;
+  font-size: 14px;
+  transition: border-color 0.3s;
+}
+
+input[type="text"]:focus {
+  outline: none;
+  border-color: #667eea;
+}
+
+.btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  width: 100%;
+}
+
+.btn-primary {
+  background: #667eea;
+  color: white;
+}
+
+.btn-primary:hover {
+  background: #5568d3;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+}
+
+.btn-danger {
+  background: #f56565;
+  color: white;
+}
+
+.btn-danger:hover {
+  background: #e53e3e;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(245, 101, 101, 0.3);
+}
+
+.saved-codes {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.code-item {
+  background: #f7fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  padding: 12px;
+  margin-bottom: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.code-info {
+  flex: 1;
+}
+
+.code-name {
+  font-weight: 600;
+  color: #2d3748;
+  margin-bottom: 4px;
+}
+
+.code-url {
+  font-size: 12px;
+  color: #718096;
+  margin-bottom: 4px;
+}
+
+.code-value {
+  font-size: 14px;
+  color: #667eea;
+  font-weight: 600;
+  font-family: 'Courier New', monospace;
+}
+
+.btn-delete {
+  background: #fc8181;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 6px 12px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.btn-delete:hover {
+  background: #f56565;
+}
+
+.empty-message {
+  color: #a0aec0;
+  text-align: center;
+  padding: 20px;
+  font-style: italic;
+}
+
+.success-message {
+  background: #c6f6d5;
+  border: 1px solid #9ae6b4;
+  color: #22543d;
+  padding: 10px;
+  border-radius: 4px;
+  margin-bottom: 12px;
+  text-align: center;
+  font-size: 14px;
+}
