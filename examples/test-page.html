@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MFA Extension Test Page</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            max-width: 500px;
+            width: 100%;
+        }
+        
+        h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        
+        .subtitle {
+            color: #718096;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f7fafc;
+            border-radius: 8px;
+            border: 2px solid #e2e8f0;
+        }
+        
+        .test-section h2 {
+            color: #2d3748;
+            font-size: 18px;
+            margin-bottom: 15px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            font-weight: 600;
+            color: #4a5568;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        
+        input[type="text"],
+        input[type="tel"],
+        input[type="number"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #cbd5e0;
+            border-radius: 6px;
+            font-size: 16px;
+            transition: all 0.3s;
+            font-family: 'Courier New', monospace;
+            letter-spacing: 2px;
+        }
+        
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .btn {
+            background: #667eea;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 100%;
+        }
+        
+        .btn:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+        
+        .instructions {
+            background: #fff5e6;
+            border: 2px solid #ffd966;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+        
+        .instructions h3 {
+            color: #996600;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+        
+        .instructions ol {
+            margin-left: 20px;
+            color: #7a5200;
+        }
+        
+        .instructions li {
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        
+        .code {
+            background: #2d3748;
+            color: #68d391;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 MFA Test Page</h1>
+        <p class="subtitle">Test the Chrome MFA Auto-Injector Extension</p>
+        
+        <div class="instructions">
+            <h3>📋 Instructions:</h3>
+            <ol>
+                <li>Install and enable the MFA Auto-Injector extension</li>
+                <li>Add a test code with URL pattern: <span class="code">localhost</span> or <span class="code">file://</span></li>
+                <li>Set your test MFA code (e.g., <span class="code">123456</span>)</li>
+                <li>Reload this page and watch the magic happen! ✨</li>
+            </ol>
+        </div>
+        
+        <form id="testForm">
+            <div class="test-section">
+                <h2>Test 1: Standard MFA Input</h2>
+                <div class="form-group">
+                    <label for="mfa-code">MFA Code:</label>
+                    <input type="text" id="mfa-code" name="code" placeholder="000000" maxlength="6">
+                </div>
+            </div>
+            
+            <div class="test-section">
+                <h2>Test 2: OTP Input</h2>
+                <div class="form-group">
+                    <label for="otp-input">One-Time Password:</label>
+                    <input type="text" id="otp-input" name="otp" placeholder="000000" maxlength="6">
+                </div>
+            </div>
+            
+            <div class="test-section">
+                <h2>Test 3: Verification Code</h2>
+                <div class="form-group">
+                    <label for="verification-code">Verification Code:</label>
+                    <input type="tel" id="verification-code" name="verification" placeholder="000000" maxlength="6">
+                </div>
+            </div>
+            
+            <div class="test-section">
+                <h2>Test 4: 2FA Code</h2>
+                <div class="form-group">
+                    <label for="2fa-code">Two-Factor Code:</label>
+                    <input type="number" id="2fa-code" name="2fa" placeholder="000000">
+                </div>
+            </div>
+            
+            <button type="submit" class="btn">Submit (Test Only)</button>
+        </form>
+        
+        <div id="result" style="margin-top: 20px; padding: 15px; background: #e6fffa; border: 2px solid #4fd1c5; border-radius: 8px; display: none;">
+            <strong style="color: #047857;">✓ Form Values:</strong>
+            <pre id="formValues" style="margin-top: 10px; color: #065f46; font-family: 'Courier New', monospace; font-size: 13px;"></pre>
+        </div>
+    </div>
+    
+    <script>
+        document.getElementById('testForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = {
+                'MFA Code': document.getElementById('mfa-code').value,
+                'OTP Input': document.getElementById('otp-input').value,
+                'Verification Code': document.getElementById('verification-code').value,
+                '2FA Code': document.getElementById('2fa-code').value
+            };
+            
+            const resultDiv = document.getElementById('result');
+            const formValuesDiv = document.getElementById('formValues');
+            
+            let resultText = '';
+            for (const [field, value] of Object.entries(formData)) {
+                resultText += `${field}: ${value || '(empty)'}\n`;
+            }
+            
+            formValuesDiv.textContent = resultText;
+            resultDiv.style.display = 'block';
+            
+            // Check if any field was auto-filled
+            const hasAutoFilled = Object.values(formData).some(val => val !== '');
+            if (hasAutoFilled) {
+                console.log('✓ Auto-injection detected!');
+            }
+        });
+        
+        // Monitor input changes
+        const inputs = document.querySelectorAll('input[type="text"], input[type="tel"], input[type="number"]');
+        inputs.forEach(input => {
+            input.addEventListener('input', function() {
+                console.log(`Input changed: ${this.id} = ${this.value}`);
+            });
+        });
+    </script>
+</body>
+</html>
