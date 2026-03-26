@@ -71,7 +71,7 @@ const ACCOUNTS = [
     hostMatch: ["example.com", "login.example.com"],
     codeInputSelector: 'input[name="otp"]',
     submitButtonSelector: 'button[type="submit"]',
-    secret: "JBSWY3DPEHPK3PXP" // base32 TOTP secret (temporary)
+    secret: "ABCDEFG123456" // base32 TOTP secret (temporary)
   }
 ];
 ```
