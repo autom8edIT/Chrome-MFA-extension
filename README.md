@@ -4,7 +4,7 @@
 
 ---
 
-## 🎉 What's New in v4.5 (Sonnet Edition)
+## 🎉 What's New in v4.5 (Vault Edition)
 
 Version 4.5 represents a complete merger of the working auto-injector with the full vault manager, enhanced with all requested improvements:
 
