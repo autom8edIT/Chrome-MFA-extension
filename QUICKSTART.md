@@ -7,7 +7,7 @@ The extension needs icon files. You have two options:
 
 **Option A: Use existing icons**
 - Copy `icon*.png` files from `autom8ed-MFA_Working` folder
-- Paste into `Chrome-MFA-v4.5-Sonnet` folder
+- Paste into `Chrome-MFA-v4.5` folder
 
 **Option B: Skip icons (extension will still work)**
 - Chrome will show warnings but extension functions normally
@@ -19,7 +19,7 @@ The extension needs icon files. You have two options:
 2. Navigate to: `chrome://extensions/`
 3. Enable **Developer mode** (toggle in top-right corner)
 4. Click **"Load unpacked"** button
-5. Browse to and select: `C:\Users\Joel\Documents\GitHub\autom8ed-tools\Chrome-MFA-v4.5-Sonnet`
+5. Browse to and select: `\Chrome-MFA-v4.5`
 6. Click **"Select Folder"**
 
 ✅ Extension should now appear in your toolbar!
@@ -79,12 +79,12 @@ The extension needs icon files. You have two options:
 
 **Extension folder:**
 ```
-C:\Users\Joel\Documents\GitHub\autom8ed-tools\Chrome-MFA-v4.5-Sonnet
+\Chrome-MFA-v4.5
 ```
 
 **Your old working extension:**
 ```
-C:\Users\Joel\Documents\GitHub\autom8ed-tools\autom8ed-MFA_Working
+\autom8ed-MFA_Working
 ```
 
 **Icons you can copy from old extension:**
