@@ -1,4 +1,4 @@
-/* manager.js — Autom8ed TOTP Vault Manager (v4.5 - Sonnet Edition)
+/* manager.js — Autom8ed TOTP Vault Manager (v4.5)
    - Improvements:
        • Auto-extract label from otpauth:// URIs
        • Base32 secret validation
