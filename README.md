@@ -1,4 +1,4 @@
-# 🔐 Autom8ed TOTP Manager v4.5 - Sonnet Edition
+# 🔐 Autom8ed TOTP Manager v4.5 - Vault Edition
 
 **Full-featured Chrome extension for TOTP (Time-based One-Time Password) management with auto-injection capabilities.**
 
@@ -6,7 +6,7 @@
 
 ## 🎉 What's New in v4.5 (Sonnet Edition)
 
-Version 4.5 represents a complete merger of the working auto-injector with the full vault manager, enhanced by Claude Sonnet 4.5 with all requested improvements:
+Version 4.5 represents a complete merger of the working auto-injector with the full vault manager, enhanced with all requested improvements:
 
 ### ✨ New Features
 
@@ -38,7 +38,7 @@ Version 4.5 represents a complete merger of the working auto-injector with the f
 ## 📁 File Structure
 
 ```
-Chrome-MFA-v4.5-Sonnet/
+Chrome-MFA-v4.5/
 ├── manifest.json           # Extension manifest
 ├── popup.html              # Popup interface (4 profile buttons)
 ├── popup.js                # TOTP generation & injection logic
@@ -58,12 +58,12 @@ Chrome-MFA-v4.5-Sonnet/
 1. Open Chrome and navigate to `chrome://extensions/`
 2. Enable "Developer mode" (top right toggle)
 3. Click "Load unpacked"
-4. Select the `Chrome-MFA-v4.5-Sonnet` folder
+4. Select the `Chrome-MFA-v4.5` folder
 5. Extension icon appears in toolbar
 
 ### Option 2: Pack Extension
 1. In `chrome://extensions/`, click "Pack extension"
-2. Select the `Chrome-MFA-v4.5-Sonnet` folder
+2. Select the `Chrome-MFA-v4.5` folder
 3. Install the generated `.crx` file
 
 ---
@@ -232,7 +232,7 @@ Auto-submit: ✓
 
 ## 📝 Version History
 
-### v4.5 (Sonnet Edition) - 2026-02-20
+### v4.5 (Vault Edition) - 2026-02-20
 - ✨ Complete merger of working injector + vault manager
 - ✅ All 9 requested improvements implemented
 - 🎨 Modern UI with gradient styles
@@ -251,9 +251,9 @@ Auto-submit: ✓
 
 ## 🙏 Credits
 
-**Created by**: Joel  
-**Enhanced by**: Claude Sonnet 4.5 (Anthropic)  
-**Version**: 4.5.0 "Sonnet Edition"  
+**Created by**: autom8ed  
+**Enhanced by**: VS Code Agent Mode
+**Version**: 4.5.0 "Vault Edition"  
 **Date**: February 20, 2026
 
 ---
