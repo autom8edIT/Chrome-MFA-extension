@@ -1,10 +1,10 @@
-# 🎉 VERSION 4.5 "SONNET EDITION" - BUILD COMPLETE
+# 🎉 VERSION 4.5 "VAULT SUPPORT EDITION" - BUILD COMPLETE
 
 ## ✅ Build Summary
 
 **Date**: February 20, 2026  
 **Version**: 4.5.0  
-**Codename**: Sonnet Edition  
+**Codename**: Vault Edition  
 **Status**: READY TO INSTALL  
 
 ---
@@ -150,7 +150,7 @@ Follow these steps:
 1. Open Chrome → chrome://extensions/
 2. Enable "Developer mode"
 3. Click "Load unpacked"
-4. Select: C:\Users\Joel\Documents\GitHub\autom8ed-tools\Chrome-MFA-v4.5-Sonnet
+4. Select: Path\To\Extension folder
 5. Extension appears in toolbar! 🎉
 ```
 
@@ -232,8 +232,8 @@ If anything doesn't work:
 
 ## 💝 Dedication
 
-**Version 4.5 "Sonnet Edition"**  
-*In honor of Claude Sonnet 4.5*
+**Version 4.5 "Vault Edition"**  
+*In honor of VS Code Agent Mode*
 
 Built with attention to detail, implementing every requested feature with proper error handling, validation, and user experience enhancements.
 
@@ -242,6 +242,6 @@ Built with attention to detail, implementing every requested feature with proper
 ---
 
 **Created**: February 20, 2026  
-**For**: Joel  
-**By**: Claude Sonnet 4.5  
+**For**: Everyone that hate entering MFA codes manually  
+**By**: autom8ed
 **Status**: ✅ PRODUCTION READY
