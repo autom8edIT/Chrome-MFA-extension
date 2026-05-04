@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Autom8ed TOTP Manager v4.5</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🔐 Autom8ed TOTP Manager <span class="version">v4.5</span></h1>
+      <p class="subtitle">Sonnet Edition - Full-Featured TOTP Vault</p>
+    </header>
+
+    <section class="form-section">
+      <h2>Add / Edit Profile</h2>
+      
+      <div id="currentEdit" class="edit-indicator" style="display:none;"></div>
+      
+      <div class="form-group">
+        <label for="secret">Secret (Base32 or otpauth:// URI):</label>
+        <textarea id="secret" rows="3" placeholder="Paste Base32 secret or otpauth:// URI here..."></textarea>
+        <small>Supports: Base32 secrets, otpauth://totp/... URIs, or otpauth-migration:// bulk import</small>
+      </div>
+
+      <div class="form-group">
+        <label for="label">Display Label (shown on button):</label>
+        <input type="text" id="label" placeholder="e.g., O365, VPN, GitHub, etc.">
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="digits">Digits:</label>
+          <input type="number" id="digits" value="6" min="6" max="8">
+        </div>
+
+        <div class="form-group">
+          <label for="period">Period (seconds):</label>
+          <input type="number" id="period" value="30" min="15" max="60">
+        </div>
+
+        <div class="form-group">
+          <label for="algo">Algorithm:</label>
+          <select id="algo">
+            <option value="SHA1">SHA1</option>
+            <option value="SHA256">SHA256</option>
+            <option value="SHA512">SHA512</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="selector">CSS Selector (optional - for auto-injection):</label>
+        <input type="text" id="selector" placeholder="e.g., #tokencode, input[name='otp']">
+        <small>Leave empty to skip auto-injection for this profile</small>
+      </div>
+
+      <div class="form-group checkbox-group">
+        <label>
+          <input type="checkbox" id="autoSubmit">
+          Auto-submit form after injection
+        </label>
+      </div>
+
+      <div class="button-group">
+        <button id="save" class="btn btn-primary">💾 Save Profile</button>
+        <button id="clearBtn" class="btn btn-secondary">🗑️ Clear Form</button>
+      </div>
+
+      <div id="msg" class="message"></div>
+    </section>
+
+    <section class="list-section">
+      <div class="section-header">
+        <h2>Saved Profiles</h2>
+        <div class="button-group-inline">
+          <button id="exportBtn" class="btn btn-success">📤 Export Vault</button>
+          <button id="importBtn" class="btn btn-info">📥 Import Vault</button>
+        </div>
+      </div>
+      
+      <div id="list" class="profile-list">
+        <div style="color:#888;padding:20px;text-align:center;">Loading...</div>
+      </div>
+      
+      <input type="file" id="file" accept=".json" style="display:none;">
+    </section>
+
+    <footer>
+      <p>🎉 Version 4.5 "Sonnet Edition" - Enhanced by Claude Sonnet 4.5</p>
+      <p>Features: Auto-label extraction • Base32 validation • Smart profileMap • Import validation • Duplicate detection</p>
+    </footer>
+  </div>
+
+  <script src="manager.js"></script>
+</body>
+</html>

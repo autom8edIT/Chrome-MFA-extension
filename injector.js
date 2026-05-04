@@ -1,83 +1,174 @@
-// Auto-inject only if MFA field is present
-(function () {
-  const secrets = {
-    default: "ADD_YOUR_SECRET_HERE",
-    o365: "ADD_YOUR_SECRET_HERE",
-    passwordstate: "ADD_YOUR_SECRET_HERE"
-    #ADD_MORE_SERVICES_IF_NEEDED
-  };
+/* injector.js — Autom8ed TOTP Content Script (v4.5)
+   - Receives TOTP codes from popup
+   - Injects into specified selector or common MFA fields
+   - Auto-submits if configured
+   - Handles field resets with retry logic
+*/
 
-  const service = "default";
+"use strict";
 
-  const base32ToBytes = (base32) => {
-    const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
-    let bits = "", bytes = [];
-    for (const char of base32.replace(/=+$/, "").toUpperCase()) {
-      const val = alphabet.indexOf(char);
-      if (val === -1) continue;
-      bits += val.toString(2).padStart(5, '0');
+// Listen for injection commands from popup
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.type === "INJECT_TOTP") {
+    injectCode(message.code, message.selector, message.autoSubmit, message.profileName);
+    sendResponse({ status: "injected" });
+  }
+  return true;
+});
+
+async function injectCode(code, customSelector, autoSubmit, profileName) {
+  console.log(`[Autom8ed v4.5] Injecting TOTP for profile: ${profileName}`);
+
+  // Selectors to try (custom first, then common patterns)
+  const selectors = [
+    customSelector,
+    '#tokencode',
+    'input[name="otp"]',
+    'input[name="otpCode"]',
+    'input[name="token"]',
+    'input[name="code"]',
+    'input[type="tel"][autocomplete="one-time-code"]',
+    'input[autocomplete="one-time-code"]',
+    'input[placeholder*="code" i]',
+    'input[placeholder*="token" i]',
+    'input[aria-label*="code" i]',
+    'input[id*="otp" i]',
+    'input[id*="mfa" i]',
+    'input[id*="2fa" i]',
+    'input[class*="otp" i]',
+    'input[class*="mfa" i]'
+  ].filter(s => s); // Remove nulls
+
+  let targetInput = null;
+
+  // Find first matching input
+  for (const sel of selectors) {
+    try {
+      const el = document.querySelector(sel);
+      if (el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA')) {
+        targetInput = el;
+        console.log(`[Autom8ed] Found input via selector: ${sel}`);
+        break;
+      }
+    } catch (e) {
+      // Invalid selector, skip
     }
-    for (let i = 0; i + 8 <= bits.length; i += 8) {
-      bytes.push(parseInt(bits.slice(i, i + 8), 2));
+  }
+
+  if (!targetInput) {
+    console.warn("[Autom8ed] No MFA input field found. Code copied to clipboard.");
+    return;
+  }
+
+  // Inject code with retry logic (handles field resets)
+  const fillAndValidate = () => {
+    targetInput.focus();
+    targetInput.value = code;
+    targetInput.dispatchEvent(new Event('input', { bubbles: true }));
+    targetInput.dispatchEvent(new Event('change', { bubbles: true }));
+    targetInput.dispatchEvent(new Event('blur', { bubbles: true }));
+    
+    // Also trigger keyboard events for picky sites
+    targetInput.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true }));
+    targetInput.dispatchEvent(new KeyboardEvent('keyup', { bubbles: true }));
+  };
+
+  // Initial fill
+  fillAndValidate();
+  console.log(`[Autom8ed] Code injected: ${code}`);
+
+  // Retry after delay to defeat field resets
+  setTimeout(() => {
+    if (targetInput.value !== code) {
+      console.log("[Autom8ed] Field was reset, re-injecting...");
+      fillAndValidate();
     }
-    return new Uint8Array(bytes);
-  };
+  }, 300);
 
-  const getTimeBuffer = () => {
-    const epoch = Math.floor(Date.now() / 1000);
-    const counter = Math.floor(epoch / 30);
-    const buffer = new ArrayBuffer(8);
-    const view = new DataView(buffer);
-    view.setUint32(4, counter); // Big endian counter in lower 4 bytes
-    return new Uint8Array(buffer);
-  };
-
-  const generateTOTP = async (secret) => {
-    const keyBytes = base32ToBytes(secret);
-    const timeBytes = getTimeBuffer();
-    const cryptoKey = await crypto.subtle.importKey("raw", keyBytes, { name: "HMAC", hash: "SHA-1" }, false, ["sign"]);
-    const sig = await crypto.subtle.sign("HMAC", cryptoKey, timeBytes);
-    const bytes = new Uint8Array(sig);
-    const offset = bytes[bytes.length - 1] & 0xf;
-    const binary = ((bytes[offset] & 0x7f) << 24) |
-                   ((bytes[offset + 1] & 0xff) << 16) |
-                   ((bytes[offset + 2] & 0xff) << 8) |
-                   (bytes[offset + 3] & 0xff);
-    return (binary % 1000000).toString().padStart(6, '0');
-  };
-
-  const inject = async () => {
-    const inputEl = document.querySelector('#tokencode');
-    if (!inputEl) {
-      console.log("[Autom8ed] #tokencode not found. Skipping injection.");
-      return;
-    }
-
-    const code = await generateTOTP(secrets[service]);
-    console.log("[Autom8ed] Auto-injected TOTP:", code);
-
-    const buttonSelectors = ['#LogonButton', 'button[name="_eventId_proceed"]', 'button[type="submit"]'];
-
-    const fillInput = () => {
-      inputEl.focus();
-      inputEl.value = code;
-      inputEl.dispatchEvent(new Event('input', { bubbles: true }));
-      inputEl.dispatchEvent(new Event('change', { bubbles: true }));
-      console.log("[Autom8ed] Code injected.");
-    };
-
-    fillInput();
+  // Auto-submit if enabled
+  if (autoSubmit) {
     setTimeout(() => {
-      fillInput();
-      const btn = buttonSelectors.map(sel => document.querySelector(sel)).find(el => el);
-      if (btn) {
-        btn.click();
-        console.log("[Autom8ed] Login button clicked.");
+      const submitBtn = findSubmitButton();
+      if (submitBtn) {
+        console.log("[Autom8ed] Auto-submitting form...");
+        submitBtn.click();
       } else {
-        console.warn("[Autom8ed] No login button found.");
+        console.warn("[Autom8ed] No submit button found for auto-submit.");
       }
     }, 500);
-  };
+  }
+}
 
-  inject();
-})();
+function findSubmitButton() {
+  // Common submit button patterns
+  const buttonSelectors = [
+    'button[type="submit"]',
+    'input[type="submit"]',
+    'button[name="_eventId_proceed"]',
+    '#LogonButton',
+    'button:has-text("Submit")',
+    'button:has-text("Verify")',
+    'button:has-text("Continue")',
+    'button:has-text("Sign in")',
+    'button:has-text("Log in")'
+  ];
+
+  for (const sel of buttonSelectors) {
+    try {
+      const btn = document.querySelector(sel);
+      if (btn && !btn.disabled) return btn;
+    } catch (e) {
+      // Invalid selector
+    }
+  }
+
+  // Fallback: find any button with submit-like text
+  const allButtons = document.querySelectorAll('button, input[type="button"], input[type="submit"]');
+  for (const btn of allButtons) {
+    const text = (btn.textContent || btn.value || "").toLowerCase();
+    if (text.match(/submit|verify|continue|sign|log|next/i) && !btn.disabled) {
+      return btn;
+    }
+  }
+
+  return null;
+}
+
+// Visual feedback overlay (optional - shows injection success)
+function showInjectionOverlay() {
+  const overlay = document.createElement('div');
+  overlay.style.cssText = `
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: linear-gradient(135deg, #00cc66 0%, #00aa55 100%);
+    color: white;
+    padding: 15px 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    font-family: sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    z-index: 999999;
+    animation: slideIn 0.3s ease-out;
+  `;
+  overlay.textContent = '✅ TOTP Code Injected';
+
+  const style = document.createElement('style');
+  style.textContent = `
+    @keyframes slideIn {
+      from { transform: translateX(400px); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+  `;
+  document.head.appendChild(style);
+  document.body.appendChild(overlay);
+
+  setTimeout(() => {
+    overlay.style.transition = 'opacity 0.3s ease-out';
+    overlay.style.opacity = '0';
+    setTimeout(() => overlay.remove(), 300);
+  }, 2000);
+}
+
+console.log("[Autom8ed v4.5] Content script loaded and ready.");

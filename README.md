@@ -1,211 +1,280 @@
-# README.md
-# Autom8ed MFA Injector — PoC (v0.1 → roadmap)
+# 🔐 Autom8ed TOTP Manager v4.5 - Sonnet Edition
 
-**One-liner:** Chrome extension that auto-injects TOTP codes into web login forms. Proof-of-concept now; soon with optional local Flask server and encrypted, syncable secrets.
-**Status:** Working PoC. You must add your accounts/secrets in `injector.js`. Upcoming releases add safer storage and optional server-backed operation.
+**Full-featured Chrome extension for TOTP (Time-based One-Time Password) management with auto-injection capabilities.**
 
 ---
 
-## Features (current)
+## 🎉 What's New in v4.5 (Sonnet Edition)
 
-* Client-side TOTP generation and auto-inject into matched login forms.
-* Minimal no-server design — everything runs inside the extension (PoC).
-* Simple mapping: site → selector → TOTP secret (set in `injector.js`).
-* Works on static pages and many SPAs (with retry/mutation observer support).
+Version 4.5 represents a complete merger of the working auto-injector with the full vault manager, enhanced by Claude Sonnet 4.5 with all requested improvements:
 
----
+### ✨ New Features
 
-## New / Upcoming (what you just told me)
+#### Manager Improvements
+- **Auto-extract label from URIs** - Parses `otpauth://totp/Twitter:@user` and extracts `@user` automatically
+- **Base32 secret validation** - Validates secrets before saving to prevent runtime errors
+- **Smart profileMap management** - Auto-adds new profiles to popup (if <4 slots available)
+- **Import validation** - Detailed error messages for invalid entries, skips bad secrets
+- **Export with timestamp** - Files named like `autom8ed_totp_vault_2026-02-20T15-30-45.json`
+- **Duplicate detection** - Warns when migration imports would overwrite existing profiles
+- **Edit mode indicator** - Visual feedback showing which profile is being edited
+- **Better error messages** - Specific errors like "Invalid Base32 characters" instead of generic failures
+- **Issuer parameter support** - Uses issuer from URIs when available
 
-* **Optional Flask server mode**
-  Run a local Flask agent on one machine and let the extension query it for TOTP values. Useful if you prefer keeping secrets off the extension code but use the extension only on a single trusted device.
+#### Popup Enhancements
+- **Live countdown timers** - Shows seconds remaining for current TOTP period
+- **Auto-clipboard copy** - Copies codes to clipboard when clicked
+- **Visual status feedback** - Success/error messages in popup
+- **Auto-submit indicator** - Shows 🔄 badge for profiles with auto-submit enabled
 
-  * Localhost-only by default.
-  * Token-based authentication to stop random sites from asking for codes.
-  * Recommended for advanced single-machine workflows.
-
-* **Encrypted secrets + Browser sync**
-  Secrets will be stored encrypted inside the extension and saved to the browser's extension sync storage so your profiles follow you when you sign in to Chrome on other devices. The secret storage uses a user passphrase / key for encryption locally; the encrypted blob is what syncs across devices.
-
-  * Secrets never stored plaintext in `injector.js`.
-  * Synced ciphertext is meaningless without the passphrase.
-  * You remain responsible for the passphrase. If you lose it, you lose the secrets.
-
----
-
-## Security WARNING (read this)
-
-* This is a PoC. Current version stores secrets in plaintext inside `injector.js`. That is insecure. Do not use high-value accounts with plaintext secrets.
-* Upcoming encrypted sync is safer but still operator-dependent:
-
-  * Browser-synced ciphertext is only as safe as your passphrase and browser account security.
-  * If you choose the Flask-server option, run it on localhost only, behind a strong token, and never expose it to WAN.
-* Recommended hardening roadmap:
-
-  * Encrypted vault (AES-GCM or similar) with passphrase-derived key (PBKDF2/Argon2).
-  * Keep secrets in RAM only while generating codes.
-  * Use platform secure storage (OS keychain) where possible.
-  * Minimize extension permissions and use Manifest V3.
+#### Injection Improvements
+- **Smart field detection** - Tries 15+ common MFA input selectors
+- **Retry logic** - Defeats field resets with automatic re-injection
+- **Auto-submit** - Configurable per-profile auto-submit after injection
+- **Custom selectors** - Per-profile CSS selectors for site-specific targeting
 
 ---
 
-## Quick install (developer mode)
+## 📁 File Structure
 
-1. Go to `chrome://extensions`
-2. Enable **Developer mode**
-3. Click **Load unpacked** → select the extension folder (where `manifest.json` is)
-4. Open a site with MFA, and if `injector.js` is configured the extension will attempt to inject the code.
-
----
-
-## How to configure — PoC + new flags
-
-### PoC (current)
-
-Edit `injector.js`, populate the `ACCOUNTS` array. Example:
-
-```js
-const ACCOUNTS = [
-  {
-    name: "ExampleCorp",
-    hostMatch: ["example.com", "login.example.com"],
-    codeInputSelector: 'input[name="otp"]',
-    submitButtonSelector: 'button[type="submit"]',
-    secret: "ABCDEFG123456" // base32 TOTP secret (temporary)
-  }
-];
+```
+Chrome-MFA-v4.5-Sonnet/
+├── manifest.json           # Extension manifest
+├── popup.html              # Popup interface (4 profile buttons)
+├── popup.js                # TOTP generation & injection logic
+├── manager.html            # Full vault management UI
+├── manager.js              # Enhanced manager with all improvements
+├── injector.js             # Content script for auto-injection
+├── styles.css              # Shared styles for manager
+├── README.md               # This file
+└── icons/                  # Extension icons (16/32/48/64/128px)
 ```
 
-### New flags (v0.2+)
+---
 
-Add these settings to `injector.js` (or to `options.html` when GUI is added):
+## 🚀 Installation
 
-```js
-// injector.js (config)
-const CONFIG = {
-  // Mode: "local" uses built-in encrypted store; "flask" queries your local Flask server
-  mode: "local", // or "flask"
+### Option 1: Load Unpacked (Development)
+1. Open Chrome and navigate to `chrome://extensions/`
+2. Enable "Developer mode" (top right toggle)
+3. Click "Load unpacked"
+4. Select the `Chrome-MFA-v4.5-Sonnet` folder
+5. Extension icon appears in toolbar
 
-  // Flask server settings (only used when mode === "flask")
-  flask: {
-    enabled: false,
-    url: "http://127.0.0.1:8787", // default local URL
-    token: "change_me_to_a_long_random_token", // Bearer token for auth
-    timeoutMs: 2000
+### Option 2: Pack Extension
+1. In `chrome://extensions/`, click "Pack extension"
+2. Select the `Chrome-MFA-v4.5-Sonnet` folder
+3. Install the generated `.crx` file
+
+---
+
+## 📖 Usage Guide
+
+### Adding Your First Profile
+
+1. **Click extension icon** → **"⚙️ Manage Profiles"**
+2. **Paste your secret** (supports 3 formats):
+   - **Base32 secret**: `ABCDEFGHJKLMNOPQRSTUVWZ`
+   - **otpauth:// URI**: `otpauth://totp/Twitter:@user?secret=ABCDEFGHJKLMNOPQRSTUVWZ=Twitter`
+   - **Google Auth migration**: `otpauth-migration://offline?data=...`
+3. **Label auto-fills** from URI (or enter manually)
+4. **Adjust settings** (digits, period, algorithm) if needed
+5. **(Optional) Add CSS selector** for auto-injection: `#tokencode`
+6. **(Optional) Enable auto-submit** to click submit button after injection
+7. **Click "💾 Save Profile"**
+
+### Using TOTP Codes
+
+#### Method 1: Manual Copy (Popup)
+1. Click extension icon in toolbar
+2. Click desired profile button
+3. Code is **copied to clipboard** and **injected** (if selector configured)
+4. Paste manually if injection didn't work
+
+#### Method 2: Auto-Injection (Content Script)
+1. Navigate to MFA page
+2. Click profile in popup
+3. Code auto-fills and optionally submits
+4. Works without clicking if selector matches
+
+### Importing Profiles
+
+#### From Google Authenticator Export
+1. Export from Google Authenticator app (QR code → "Transfer accounts")
+2. Use a QR scanner to get the `otpauth-migration://` URI
+3. Paste into manager secret field
+4. All accounts import automatically
+
+#### From JSON Vault
+1. Click "📥 Import Vault" in manager
+2. Select `autom8ed_totp_vault_*.json` file
+3. Validates and imports valid entries
+
+### Exporting Vault
+1. Click "📤 Export Vault" in manager
+2. Downloads `autom8ed_totp_vault_2026-02-20T15-30-45.json`
+3. Safe to backup or transfer to another browser
+
+---
+
+## 🔧 Configuration
+
+### Storage Schema
+
+**Chrome Local Storage:**
+```json
+{
+  "vault": {
+    "Twitter": {
+      "secret": "ABCDEFGHJKLMNOPQRSTUVWZ",
+      "digits": 6,
+      "period": 30,
+      "algo": "SHA1",
+      "label": "@2happyCSGO",
+      "selector": "#tokencode",
+      "autoSubmit": false
+    },
+    "O365": {
+      "secret": "ABCDEFGHJKLMNOPQRSTUVWZ",
+      "digits": 6,
+      "period": 30,
+      "algo": "SHA1",
+      "label": "Office 365",
+      "selector": "input[name='otpCode']",
+      "autoSubmit": true
+    }
   },
-
-  // Encrypted vault settings (local mode)
-  vault: {
-    enabled: true,                 // if false, fallback to static ACCOUNTS
-    storage: "chrome.sync",        // planned: chrome.storage.sync for cross-device sync
-    derivation: { iterations: 100000, alg: "PBKDF2" } // key derivation params
-  }
-};
+  "profileMap": ["Twitter", "O365", "VPN", "GitHub"]
+}
 ```
 
-Notes:
+### Supported Algorithms
+- **SHA1** (most common, default)
+- **SHA256**
+- **SHA512**
 
-* `mode: "flask"` will attempt to fetch a TOTP for the matched account by calling the Flask endpoint (see Flask spec below).
-* `vault.enabled = true` means the extension will load encrypted secrets from chrome.storage and ask the user for their passphrase when needed.
-* For now, keep `flask.enabled` false unless you properly configured the Flask agent.
-
----
-
-## Flask agent — minimal spec (what you'll run locally)
-
-Run a tiny Flask server that responds only on `localhost` and implements a single authenticated endpoint:
-
-**Endpoints**
-
-* `GET /ping` — health check (optional)
-* `POST /totp` — body: `{ "account_id": "ExampleCorp", "timestamp": 1670000000 }`
-
-  * Requires header: `Authorization: Bearer <token>`
-  * Response: `{ "totp": "123456", "valid_until": 1670000030 }`
-
-**Security**
-
-* Only bind to `127.0.0.1` (or Unix socket).
-* Require a strong static token or HMAC signing.
-* Rate-limit requests.
-* Do not accept remote connections without explicit firewall rules.
-
-This design keeps the secret entirely off extension code. The Flask app holds decrypted secrets and only returns codes.
+### Supported Formats
+- **6-digit codes** (default, standard)
+- **7-digit codes** (Steam, etc.)
+- **8-digit codes** (some banks)
+- **15-60 second periods** (30s default)
 
 ---
 
-## How it works (brief)
+## 🛠️ Technical Details
 
-1. Content script checks hostname against configured accounts.
-2. Depending on `CONFIG.mode`:
+### TOTP Generation
+- **Algorithm**: RFC 6238 compliant
+- **Implementation**: Web Crypto API (SubtleCrypto)
+- **Base32 decoding**: Custom implementation with validation
+- **Hash functions**: SHA-1, SHA-256, SHA-512
 
-   * `local`: decrypt vault with passphrase and compute TOTP locally.
-   * `flask`: call local Flask endpoint to request a TOTP for the selected account.
-3. Find the input `codeInputSelector`, fill the code, then optionally click `submitButtonSelector`.
-4. For SPAs the script retries and/or uses a MutationObserver to catch dynamic DOM injection.
+### Auto-Injection Strategy
+1. **Selector priority**: Custom selector → Common patterns
+2. **Retry logic**: Re-injects after 300ms to defeat field resets
+3. **Event dispatch**: `input`, `change`, `blur`, `keydown`, `keyup`
+4. **Submit detection**: 10+ button selector patterns + text matching
 
----
-
-## Troubleshooting
-
-* No injection:
-
-  * Verify host match and `codeInputSelector`.
-  * Check DevTools console for errors.
-  * If using Flask: confirm `flask.url`, token, and CORS are correct. Flask must be reachable from the browser (localhost).
-* Vault issues:
-
-  * If passphrase is wrong, extension cannot decrypt secrets.
-  * For sync issues, confirm browser sync is enabled for extensions and that chrome.storage.sync is operating (limits apply).
-* SPA issues:
-
-  * Increase retry attempts or bind to DOM mutations.
+### Security Considerations
+- **Local storage only** - Secrets never leave your browser
+- **No cloud sync** - Use manual export/import for backups
+- **Content script isolation** - Runs in sandboxed context
+- **No network requests** - 100% offline after installation
 
 ---
 
-## Roadmap / TODO (updated)
+## 🎯 Examples
 
-* **v0.1** — PoC: manual `injector.js` config (current).
-* **v0.2** — Encrypted local vault; passphrase entry UI; store ciphertext in `chrome.storage.sync`.
-* **v0.3** — Optional local Flask agent mode (secure, token-based).
-* **v0.4** — Options UI with profile import/export, per-profile policies (auto-click vs manual).
-* **v1.0** — Production-ready: hardened manifest (V3), minimal permissions, extensive security docs, UX polish.
+### Twitter Example
+```
+URI: otpauth://totp/Twitter:@2happyCSGO?secret=ABCDEFGHJKLMNOPQRSTUVWZ&issuer=Twitter
 
----
+Extracted:
+- Label: @2happyCSGO (auto-detected from ":@2happyCSGO")
+- Secret: ABCDEFGHJKLMNOPQRSTUVWZ
+- Digits: 6 (default)
+- Period: 30 (default)
+- Algorithm: SHA1 (default)
+```
 
-## Developer notes and security considerations
-
-* Never log secrets or derived keys to console in release builds.
-* Use AES-GCM for confidentiality + integrity. Derive keys with PBKDF2/Argon2 and a reasonable work factor.
-* Limit synced data to ciphertext blobs. The passphrase stays local and never syncs.
-* Prefer ephemeral RAM buffers for decrypted secrets; wipe memory after code generation.
-* If you adopt platform keyrings (Windows DPAPI, macOS Keychain, Linux libsecret), design a fallback for other platforms.
-
----
-
-## Contributing
-
-* PRs welcome. For security-impacting changes, include design notes and threat model.
-* If adding Flask integrations or cloud-sync features, document the exact API and threat implications.
-
----
-
-## License
-
-MIT. Use responsibly. If you sync secrets across devices, do not blame the extension for human mistakes.
+### Custom Configuration
+```
+Label: Amazing Login
+Secret: ABCDEFGHJKLMNOPQRSTUVWZ
+Digits: 6
+Period: 30
+Algorithm: SHA1
+Selector: input[name="token"]
+Auto-submit: ✓
+```
 
 ---
 
-## Changelog
+## 🐛 Troubleshooting
 
-* **v0.1** — Initial PoC. Manual `injector.js` configuration. Content-script TOTP injection works.
-* **Planned** — Added design notes for local Flask server and encrypted syncable vault.
+### "No MFA input field found"
+- **Solution**: Add custom CSS selector in manager
+- **Find selector**: Right-click input → Inspect → Copy selector
+
+### "Invalid Base32 secret"
+- **Solution**: Check for invalid characters (only A-Z, 2-7 allowed)
+- **Common issue**: Lowercase letters or spaces (auto-cleaned)
+
+### Auto-submit not working
+- **Solution 1**: Disable auto-submit and click manually
+- **Solution 2**: Site may have anti-automation protections
+
+### Code not injecting
+- **Solution**: Click popup button to copy, paste manually
+- **Check**: Console logs in DevTools (F12) for error messages
 
 ---
 
-There. It now documents the Flask option and encrypted-sync plan, plus gives quick config examples you can paste into `injector.js`. If you want, I can also:
+## 📝 Version History
 
-* create the minimal Flask agent skeleton (Python) that matches the spec,
-* or draft the `options.html` UI for passphrase entry + profile import/export.
+### v4.5 (Sonnet Edition) - 2026-02-20
+- ✨ Complete merger of working injector + vault manager
+- ✅ All 9 requested improvements implemented
+- 🎨 Modern UI with gradient styles
+- 🔄 Smart profileMap auto-management
+- 📊 Live countdown timers in popup
+- 🛡️ Base32 validation + error handling
+- 📦 Export with timestamps
+- 🔍 Duplicate detection on import
+- 🎯 Auto-label extraction from URIs
+- ✏️ Edit mode visual indicators
 
-Pick one and I’ll make it real — begrudgingly helpful as always.
+### v3.1 - Previous stable release
+### v3.0.6 - Working auto-injector base
+
+---
+
+## 🙏 Credits
+
+**Created by**: Joel  
+**Enhanced by**: Claude Sonnet 4.5 (Anthropic)  
+**Version**: 4.5.0 "Sonnet Edition"  
+**Date**: February 20, 2026
+
+---
+
+## 📄 License
+
+Personal use project. No license restrictions.
+
+---
+
+## 🎉 Enjoy!
+
+You now have a full-featured TOTP manager that:
+- ✅ Imports from Google Authenticator exports
+- ✅ Parses `otpauth://` URIs with auto-label extraction
+- ✅ Validates secrets before saving
+- ✅ Auto-injects codes into websites
+- ✅ Manages up to 4 quick-access profiles
+- ✅ Exports/imports full vault with validation
+- ✅ Shows live countdown timers
+- ✅ Supports custom selectors per profile
+- ✅ Auto-submits forms (optional)
+
+**Happy authenticating! 🔐**

@@ -1,9 +1,9 @@
 {
   "manifest_version": 3,
-  "name": "Autom8ed TOTP Injector v3.0.6r3",
-  "version": "3.0.6",
-  "description": "Reliable 2FA injector. Auto-inject, delayed click + TOTP overwrite to defeat field resets.",
-  "permissions": ["scripting", "tabs"],
+  "name": "Autom8ed TOTP Manager v4.5 (Vault Supported Edition)",
+  "version": "4.5.0",
+  "description": "Full-featured TOTP vault with auto-injection, profile management, and multi-format import support.",
+  "permissions": ["storage", "scripting", "tabs", "activeTab"],
   "host_permissions": ["<all_urls>"],
   "content_scripts": [
     {
@@ -25,6 +25,7 @@
       "32": "icon32.png",
       "48": "icon48.png"
     },
-    "default_popup": "popup.html"
+    "default_popup": "popup.html",
+    "default_title": "Autom8ed TOTP v4.5"
   }
 }

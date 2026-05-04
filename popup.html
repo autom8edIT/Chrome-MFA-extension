@@ -1,40 +1,164 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <title>Autom8ed TOTP</title>
-    <style>
-      body {
-        background-color: #1e1e1e;
-        color: #f0f0f0;
-        font-family: sans-serif;
-        padding: 10px;
-        margin: 0;
-      }
-      h3 {
-        margin-top: 0;
-      }
-      button {
-        background-color: #333;
-        color: #fff;
-        border: 1px solid #555;
-        padding: 8px 12px;
-        margin-bottom: 10px;
-        border-radius: 6px;
-        width: 100%;
-        cursor: pointer;
-        transition: all 0.2s ease-in-out;
-      }
-      button:hover {
-        background-color: #444;
-        border-color: #888;
-      }
-    </style>
-    <script src="popup.js" defer></script>
-  </head>
-  <body>
-    <h3>Inject TOTP Code</h3>
-    <button id="defaultBtn">SSO Login</button><br/>
-    <button id="o365Btn">O365</button><br/>
-    <button id="pwBtn">PasswordState</button>
-  </body>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Autom8ed TOTP v4.5</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      width: 300px;
+      background: linear-gradient(135deg, #1e1e1e 0%, #2d2d2d 100%);
+      color: #f0f0f0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      padding: 0;
+      margin: 0;
+    }
+    header {
+      background: linear-gradient(135deg, #0066cc 0%, #0052a3 100%);
+      padding: 15px;
+      text-align: center;
+      border-bottom: 2px solid #0052a3;
+    }
+    h1 {
+      font-size: 16px;
+      margin: 0;
+      font-weight: 600;
+    }
+    .version {
+      font-size: 10px;
+      opacity: 0.8;
+      display: block;
+      margin-top: 3px;
+    }
+    .profile-buttons {
+      padding: 10px;
+    }
+    .profile-btn {
+      width: 100%;
+      background: linear-gradient(135deg, #333 0%, #444 100%);
+      color: #fff;
+      border: 1px solid #555;
+      padding: 12px;
+      margin-bottom: 8px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.2s ease;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .profile-btn:hover {
+      background: linear-gradient(135deg, #444 0%, #555 100%);
+      border-color: #888;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    }
+    .profile-btn:active {
+      transform: translateY(0);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    }
+    .profile-btn .badge {
+      background: #0066cc;
+      color: #fff;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .profile-btn.auto {
+      border-left: 3px solid #00cc66;
+    }
+    .countdown {
+      font-size: 11px;
+      opacity: 0.7;
+      margin-left: auto;
+    }
+    .code-display {
+      background: #2d2d2d;
+      padding: 8px;
+      border-radius: 4px;
+      text-align: center;
+      font-family: 'Courier New', monospace;
+      font-size: 18px;
+      letter-spacing: 2px;
+      margin-top: 5px;
+      border: 1px solid #444;
+      display: none;
+    }
+    .footer {
+      padding: 10px;
+      text-align: center;
+      border-top: 1px solid #333;
+    }
+    .footer a {
+      color: #0099ff;
+      text-decoration: none;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    .footer a:hover {
+      text-decoration: underline;
+    }
+    .empty-state {
+      padding: 30px 20px;
+      text-align: center;
+      color: #888;
+    }
+    .empty-state p {
+      margin-bottom: 15px;
+      font-size: 13px;
+    }
+    .empty-state a {
+      color: #0099ff;
+      text-decoration: none;
+      font-weight: 500;
+    }
+    .status-msg {
+      padding: 8px;
+      margin: 10px;
+      border-radius: 4px;
+      font-size: 12px;
+      text-align: center;
+      display: none;
+    }
+    .status-msg.success {
+      background: #00cc6644;
+      border: 1px solid #00cc66;
+      color: #00ff88;
+    }
+    .status-msg.error {
+      background: #cc000044;
+      border: 1px solid #cc0000;
+      color: #ff6666;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🔐 Autom8ed TOTP</h1>
+    <span class="version">v4.5 Sonnet Edition</span>
+  </header>
+
+  <div id="statusMsg" class="status-msg"></div>
+
+  <div id="profileButtons" class="profile-buttons">
+    <div class="empty-state">
+      <p>⏳ Loading profiles...</p>
+    </div>
+  </div>
+
+  <div class="footer">
+    <a href="manager.html" target="_blank">⚙️ Manage Profiles</a>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
 </html>
