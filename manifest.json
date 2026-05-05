@@ -1,14 +1,28 @@
 {
   "manifest_version": 3,
-  "name": "Autom8ed TOTP Manager v4.6 (Opus Edition)",
+  "name": "Autom8ed Vault: Secure TOTP Manager",
+  "short_name": "Autom8ed Vault",
   "version": "4.6.0",
-  "description": "Full-featured TOTP vault with auto-injection, profile management, and multi-format import support.",
-  "permissions": ["storage", "scripting", "tabs", "activeTab"],
-  "host_permissions": ["<all_urls>"],
+  "description": "A secure, local-first TOTP manager with AES-GCM encryption, multi-workspace support, and auto-injection.",
+  "permissions": [
+    "storage",
+    "scripting",
+    "tabs",
+    "activeTab",
+    "clipboardWrite",
+    "notifications"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
   "content_scripts": [
     {
-      "matches": ["<all_urls>"],
-      "js": ["injector.js"],
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "injector.js"
+      ],
       "run_at": "document_idle"
     }
   ],
@@ -26,9 +40,18 @@
       "48": "icon48.png"
     },
     "default_popup": "popup.html",
-    "default_title": "Autom8ed TOTP v4.6"
+    "default_title": "Autom8ed Vault"
   },
   "background": {
-    "service_worker": "crypto-helper.js"
+    "service_worker": "background.js"
+  },
+  "commands": {
+    "inject-default": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+L",
+        "mac": "Command+Shift+L"
+      },
+      "description": "Inject default TOTP code"
+    }
   }
 }

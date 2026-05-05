@@ -1,20 +1,14 @@
-# 🔐 Autom8ed TOTP Manager v4.6 - Crypto Vault Edition
+# 🔐 Autom8ed TOTP Manager v4.6 - Opus Edition
 
 **Full-featured Chrome extension for TOTP (Time-based One-Time Password) management with auto-injection capabilities.**
 
 ---
 
-## 🎉 What's New in v4.6 (Crypto Vault Edition)
+## 🎉 What's New in v4.6 (Opus Edition)
 
-Version 4.6 represents a complete merger of the working auto-injector with the full vault manager, now with separate cryptograhic security since Chrome's own security couldn't be trusted so I've enhanced it by my own Godbrain AI Team with all requested improvements:
+Version 4.5 represents a complete merger of the working auto-injector with the full vault manager, enhanced by Claude Opus 4.6 with all requested improvements:
 
 ### ✨ New Features
-
-*** Key Changes Pushed:
-       * AES-GCM 256-bit Encryption: Replaced storage with full cryptographic protection using the new crypto-helper.js.
-       * Multi-Workspace Support: Added the ability to switch between independent security contexts (e.g., "Work" vs. "Personal").
-       * PBKDF2 Key Derivation: Implemented 100,000-iteration master password hashing for secure vault unlocking.
-       * Secure Importer: Updated the logic to handle iCloud and other backups with auto-encryption.**
 
 #### Manager Improvements
 - **Auto-extract label from URIs** - Parses `otpauth://totp/Twitter:@user` and extracts `@user` automatically
@@ -44,10 +38,9 @@ Version 4.6 represents a complete merger of the working auto-injector with the f
 ## 📁 File Structure
 
 ```
-Chrome-MFA-v4.6-Crypto-Vault/
+Chrome-MFA-v4.5-Sonnet/
 ├── manifest.json           # Extension manifest
-├── crypto-helper.js        # New cryptographic safety encryption of your vault
-├── popup.html              # Popup interface (X profile buttons)
+├── popup.html              # Popup interface (4 profile buttons)
 ├── popup.js                # TOTP generation & injection logic
 ├── manager.html            # Full vault management UI
 ├── manager.js              # Enhanced manager with all improvements
@@ -65,12 +58,12 @@ Chrome-MFA-v4.6-Crypto-Vault/
 1. Open Chrome and navigate to `chrome://extensions/`
 2. Enable "Developer mode" (top right toggle)
 3. Click "Load unpacked"
-4. Select the `Chrome-MFA-v4.X` folder
+4. Select the `Chrome-MFA-v4.5-Sonnet` folder
 5. Extension icon appears in toolbar
 
 ### Option 2: Pack Extension
 1. In `chrome://extensions/`, click "Pack extension"
-2. Select the `Chrome-MFA-v4.X` folder
+2. Select the `Chrome-MFA-v4.5-Sonnet` folder
 3. Install the generated `.crx` file
 
 ---
