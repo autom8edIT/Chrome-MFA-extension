@@ -1,4 +1,4 @@
-/* styles.css — Autom8ed TOTP Manager Styles (v4.5) */
+/* styles.css — Autom8ed TOTP Manager Styles (v4.6) */
 
 * {
   margin: 0;
@@ -376,4 +376,41 @@ footer p {
   .button-group-inline .btn {
     flex: 1;
   }
+}
+
+/* ====== Quick Access Star Toggle ====== */
+.btn-star {
+  background: none;
+  border: none;
+  font-size: 22px;
+  cursor: pointer;
+  color: #555;
+  padding: 2px 8px 2px 0;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.btn-star:hover {
+  color: #ffcc00;
+  transform: scale(1.2);
+}
+
+.btn-star.active {
+  color: #ffcc00;
+  text-shadow: 0 0 8px rgba(255, 204, 0, 0.4);
+}
+
+.item.quick-access {
+  border-left: 3px solid #ffcc00;
+}
+
+.quick-access-summary {
+  color: #ffcc00;
+  font-size: 13px;
+  padding: 8px 12px;
+  margin-bottom: 10px;
+  background: rgba(255, 204, 0, 0.08);
+  border-radius: 6px;
+  border: 1px solid rgba(255, 204, 0, 0.15);
 }

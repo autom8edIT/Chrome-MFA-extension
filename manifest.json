@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
-  "name": "Autom8ed TOTP Manager v4.5 (Vault Supported Edition)",
-  "version": "4.5.0",
+  "name": "Autom8ed TOTP Manager v4.6 (Opus Edition)",
+  "version": "4.6.0",
   "description": "Full-featured TOTP vault with auto-injection, profile management, and multi-format import support.",
   "permissions": ["storage", "scripting", "tabs", "activeTab"],
   "host_permissions": ["<all_urls>"],
@@ -26,6 +26,9 @@
       "48": "icon48.png"
     },
     "default_popup": "popup.html",
-    "default_title": "Autom8ed TOTP v4.5"
+    "default_title": "Autom8ed TOTP v4.6"
+  },
+  "background": {
+    "service_worker": "crypto-helper.js"
   }
 }

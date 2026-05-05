@@ -1,5 +1,6 @@
-/* manager.js — Autom8ed TOTP Vault Manager (v4.5)
+/* manager.js — Autom8ed TOTP Vault Manager (v4.6 - Opus Edition)
    - Improvements:
+       • AES-GCM Encryption with Master Password
        • Auto-extract label from otpauth:// URIs
        • Base32 secret validation
        • Auto-add new profiles to profileMap (if < 4 slots)
@@ -19,6 +20,8 @@
 
 // ====== DOM ======
 let secretEl, digitsEl, periodEl, algoEl, msgEl, listEl, fileEl, labelEl, selectorEl, autoEl, currentEditEl;
+let workspaceSelect, addWorkspaceBtn, renameWorkspaceBtn, deleteWorkspaceBtn;
+let sessionPassword = "";
 
 document.addEventListener("DOMContentLoaded", () => {
   secretEl = document.getElementById("secret");
@@ -33,11 +36,25 @@ document.addEventListener("DOMContentLoaded", () => {
   autoEl     = document.getElementById("autoSubmit");
   currentEditEl = document.getElementById("currentEdit");
 
+  workspaceSelect = document.getElementById("workspaceSelect");
+  addWorkspaceBtn = document.getElementById("addWorkspaceBtn");
+  renameWorkspaceBtn = document.getElementById("renameWorkspaceBtn");
+  deleteWorkspaceBtn = document.getElementById("deleteWorkspaceBtn");
+
   document.getElementById("save").addEventListener("click", onSave);
   document.getElementById("exportBtn").addEventListener("click", onExport);
   document.getElementById("importBtn").addEventListener("click", () => fileEl.click());
   document.getElementById("clearBtn")?.addEventListener("click", clearForm);
   fileEl.addEventListener("change", onImportFile);
+
+  workspaceSelect.addEventListener("change", async () => {
+    await chrome.storage.local.set({ activeWorkspace: workspaceSelect.value });
+    await refreshList();
+  });
+
+  addWorkspaceBtn.addEventListener("click", onAddWorkspace);
+  renameWorkspaceBtn.addEventListener("click", onRenameWorkspace);
+  deleteWorkspaceBtn.addEventListener("click", onDeleteWorkspace);
 
   // Auto-parse when pasting into secret field
   secretEl.addEventListener("paste", (e) => {
@@ -49,31 +66,156 @@ document.addEventListener("DOMContentLoaded", () => {
     }, 10);
   });
 
+  // Popup slots settings
+  const saveSlotsBtn = document.getElementById("saveSlotsBtn");
+  const popupSlotsInput = document.getElementById("popupSlotsInput");
+  const slotsMsg = document.getElementById("slotsMsg");
+  if (saveSlotsBtn && popupSlotsInput) {
+    chrome.storage.local.get(["popupSlots"]).then(({ popupSlots }) => {
+      popupSlotsInput.value = popupSlots || 4;
+    });
+    saveSlotsBtn.addEventListener("click", async () => {
+      const val = Math.max(1, Math.min(20, parseInt(popupSlotsInput.value) || 4));
+      popupSlotsInput.value = val;
+      await chrome.storage.local.set({ popupSlots: val });
+      if (slotsMsg) {
+        slotsMsg.textContent = `Popup will show ${val} quick-access slot${val !== 1 ? "s" : ""}.`;
+        slotsMsg.className = "message ok";
+        setTimeout(() => { slotsMsg.textContent = ""; slotsMsg.className = "message"; }, 3000);
+      }
+    });
+  }
+
   init();
 });
 
 // ====== Init / Refresh ======
 async function init() {
+  let { vault, profileMap, workspaces, activeWorkspace } = await chrome.storage.local.get([
+    "vault", "profileMap", "workspaces", "activeWorkspace"
+  ]);
+
+  // Migration: move old single vault to multi-workspace format
+  if (vault && !workspaces) {
+    workspaces = { "Default": { vault, profileMap: profileMap || [] } };
+    activeWorkspace = "Default";
+    await chrome.storage.local.set({ workspaces, activeWorkspace });
+    await chrome.storage.local.remove(["vault", "profileMap"]);
+  }
+
+  // Ensure initial workspace exists
+  if (!workspaces || Object.keys(workspaces).length === 0) {
+    workspaces = { "Default": { vault: {}, profileMap: [] } };
+    activeWorkspace = "Default";
+    await chrome.storage.local.set({ workspaces, activeWorkspace });
+  }
+
+  if (!activeWorkspace) {
+    activeWorkspace = Object.keys(workspaces)[0];
+    await chrome.storage.local.set({ activeWorkspace });
+  }
+
+  // Populate workspace selector
+  updateWorkspaceDropdown(workspaces, activeWorkspace);
+
+  // Check for plain-text secrets in active workspace (migration/onboarding)
+  const currentData = workspaces[activeWorkspace];
+  const keys = Object.keys(currentData.vault);
+  const needsEncryption = keys.some(n => {
+    const s = currentData.vault[n].secret;
+    return typeof s === 'string' && s.length < 40;
+  });
+
+  if (needsEncryption && keys.length > 0) {
+    if (confirm("Detected unencrypted secrets in this workspace. Would you like to set a Master Password and secure your vault now?")) {
+      sessionPassword = prompt("Set your Master Password (cannot be recovered!):");
+      if (sessionPassword) {
+        setMsg("Encrypting vault...");
+        for (const n of keys) {
+          if (currentData.vault[n].secret.length < 40) {
+            currentData.vault[n].secret = await CryptoHelper.encrypt(currentData.vault[n].secret.replace(/\s+/g, ""), sessionPassword);
+          }
+        }
+        workspaces[activeWorkspace] = currentData;
+        await chrome.storage.local.set({ workspaces });
+        setMsg("Vault secured successfully!");
+      }
+    }
+  }
+
   await refreshList();
 }
 
+function updateWorkspaceDropdown(workspaces, active) {
+  workspaceSelect.innerHTML = "";
+  Object.keys(workspaces).sort().forEach(ws => {
+    const opt = document.createElement("option");
+    opt.value = ws;
+    opt.textContent = ws;
+    if (ws === active) opt.selected = true;
+    workspaceSelect.appendChild(opt);
+  });
+}
+
 async function refreshList() {
-  const { vault = {} } = await chrome.storage.local.get(["vault"]);
+  const { workspaces, activeWorkspace } = await chrome.storage.local.get(["workspaces", "activeWorkspace"]);
+  const currentWS = workspaces[activeWorkspace] || { vault: {}, profileMap: [] };
+  const { vault = {} } = currentWS;
+  
   listEl.innerHTML = "";
   const names = Object.keys(vault).sort();
   
   if (names.length === 0) {
-    listEl.innerHTML = '<div style="color:#888;padding:20px;text-align:center;">No profiles yet. Add one above!</div>';
+    listEl.innerHTML = `<div style="color:#888;padding:20px;text-align:center;">No profiles in workspace "${activeWorkspace}". Add one above!</div>`;
     return;
   }
 
-  names.forEach(n => {
+  // Check if we need to decrypt
+  if (Object.values(vault).some(e => typeof e.secret === 'string' && e.secret.length > 40)) {
+    if (!sessionPassword) {
+      sessionPassword = prompt("Vault is encrypted. Enter Master Password to view/edit:");
+      if (!sessionPassword) return;
+    }
+  }
+
+  // Load profileMap for star state
+  const pm = currentWS.profileMap || [];
+
+  for (const n of names) {
     const row = document.createElement("div");
-    row.className = "item";
+    row.className = "item" + (pm.includes(n) ? " quick-access" : "");
     row.dataset.profileName = n;
+
+    // Star toggle
+    const star = document.createElement("button");
+    star.className = "btn-star" + (pm.includes(n) ? " active" : "");
+    star.textContent = pm.includes(n) ? "★" : "☆";
+    star.title = pm.includes(n) ? "Remove from quick-access" : "Add to quick-access";
+    star.addEventListener("click", async () => {
+      const { workspaces: wsUpdate, activeWorkspace: active } = await chrome.storage.local.get(["workspaces", "activeWorkspace"]);
+      let currentPM = wsUpdate[active].profileMap || [];
+      if (currentPM.includes(n)) {
+        wsUpdate[active].profileMap = currentPM.filter(x => x !== n);
+      } else {
+        wsUpdate[active].profileMap = [...currentPM, n];
+      }
+      await chrome.storage.local.set({ workspaces: wsUpdate });
+      await refreshList();
+    });
 
     const left = document.createElement("span");
     const entry = vault[n];
+    
+    // Attempt decryption for display if needed
+    let displaySecret = entry.secret;
+    if (sessionPassword && typeof entry.secret === 'string' && entry.secret.length > 40) {
+      try {
+        displaySecret = await CryptoHelper.decrypt(entry.secret, sessionPassword);
+      } catch(e) {
+        displaySecret = "[Encrypted]";
+      }
+    }
+
     left.textContent = `${n} ${entry.autoSubmit ? "🔄" : ""}`;
 
     const right = document.createElement("div");
@@ -81,22 +223,29 @@ async function refreshList() {
     const edit = document.createElement("button");
     edit.textContent = "Edit";
     edit.className = "btn btn-edit";
-    edit.addEventListener("click", () => loadProfile(n, vault[n]));
+    edit.addEventListener("click", async () => {
+      let entryToLoad = { ...vault[n] };
+      if (sessionPassword && typeof entryToLoad.secret === 'string' && entryToLoad.secret.length > 40) {
+        try {
+          entryToLoad.secret = await CryptoHelper.decrypt(entryToLoad.secret, sessionPassword);
+        } catch(e) {
+          alert("Decryption failed. Check password.");
+          return;
+        }
+      }
+      loadProfile(n, entryToLoad);
+    });
 
     const del = document.createElement("button");
     del.textContent = "Delete";
     del.className = "btn btn-danger";
     del.addEventListener("click", async () => {
-      if (!confirm(`Delete profile "${n}"?`)) return;
-      const { vault: v2 = {} } = await chrome.storage.local.get(["vault"]);
-      delete v2[n];
-      await chrome.storage.local.set({ vault: v2 });
+      if (!confirm(`Delete profile "${n}" from workspace "${activeWorkspace}"?`)) return;
+      const { workspaces: wsDel, activeWorkspace: active } = await chrome.storage.local.get(["workspaces", "activeWorkspace"]);
+      delete wsDel[active].vault[n];
       // Remove from profileMap
-      const pm = await chrome.storage.local.get(["profileMap"]);
-      if (Array.isArray(pm.profileMap)) {
-        const next = pm.profileMap.filter(x => x !== n);
-        await chrome.storage.local.set({ profileMap: next });
-      }
+      wsDel[active].profileMap = (wsDel[active].profileMap || []).filter(x => x !== n);
+      await chrome.storage.local.set({ workspaces: wsDel });
       clearForm();
       await refreshList();
       setMsg(`Deleted ${n}.`);
@@ -104,10 +253,11 @@ async function refreshList() {
 
     right.appendChild(edit);
     right.appendChild(del);
+    row.appendChild(star);
     row.appendChild(left);
     row.appendChild(right);
     listEl.appendChild(row);
-  });
+  }
 }
 
 function loadProfile(name, entry) {
@@ -150,11 +300,75 @@ function clearForm() {
   document.querySelectorAll(".item").forEach(el => el.classList.remove("editing"));
 }
 
+// ====== Workspace Handlers ======
+async function onAddWorkspace() {
+  const name = prompt("Enter name for new workspace (e.g. Work, Personal):");
+  if (!name) return;
+  
+  const { workspaces = {} } = await chrome.storage.local.get(["workspaces"]);
+  if (workspaces[name]) {
+    alert("A workspace with this name already exists.");
+    return;
+  }
+  
+  workspaces[name] = { vault: {}, profileMap: [] };
+  await chrome.storage.local.set({ workspaces, activeWorkspace: name });
+  updateWorkspaceDropdown(workspaces, name);
+  await refreshList();
+}
+
+async function onRenameWorkspace() {
+  const { workspaces, activeWorkspace } = await chrome.storage.local.get(["workspaces", "activeWorkspace"]);
+  if (activeWorkspace === "Default") {
+    alert("The Default workspace cannot be renamed.");
+    return;
+  }
+  
+  const newName = prompt(`Rename workspace "${activeWorkspace}" to:`, activeWorkspace);
+  if (!newName || newName === activeWorkspace) return;
+  
+  if (workspaces[newName]) {
+    alert("A workspace with this name already exists.");
+    return;
+  }
+  
+  workspaces[newName] = workspaces[activeWorkspace];
+  delete workspaces[activeWorkspace];
+  
+  await chrome.storage.local.set({ workspaces, activeWorkspace: newName });
+  updateWorkspaceDropdown(workspaces, newName);
+  await refreshList();
+}
+
+async function onDeleteWorkspace() {
+  const { workspaces, activeWorkspace } = await chrome.storage.local.get(["workspaces", "activeWorkspace"]);
+  if (activeWorkspace === "Default") {
+    alert("The Default workspace cannot be deleted.");
+    return;
+  }
+  
+  if (!confirm(`Delete workspace "${activeWorkspace}" and ALL its accounts?`)) return;
+  
+  delete workspaces[activeWorkspace];
+  const next = "Default";
+  await chrome.storage.local.set({ workspaces, activeWorkspace: next });
+  updateWorkspaceDropdown(workspaces, next);
+  await refreshList();
+}
+
 // ====== Save handler ======
 async function onSave() {
   const raw  = secretEl.value.trim().replace(/^["']|["']$/g, "");
   const key = (labelEl.value || "").trim();
   
+  if (!sessionPassword) {
+    sessionPassword = prompt("Set a Master Password to encrypt this vault (DO NOT LOSE THIS!):");
+    if (!sessionPassword) return;
+  }
+
+  const { workspaces, activeWorkspace } = await chrome.storage.local.get(["workspaces", "activeWorkspace"]);
+  const currentWS = workspaces[activeWorkspace];
+
   // 1) Google Authenticator migration bulk import
   if (/^otpauth-migration:\/\//i.test(raw)) {
     let entries;
@@ -165,7 +379,6 @@ async function onSave() {
     }
     if (!entries || !entries.length) return setMsg("Invalid or empty migration URI.", true);
 
-    const { vault = {} } = await chrome.storage.local.get(["vault"]);
     let imported = 0, skipped = 0, overwritten = 0;
     
     for (const e of entries) {
@@ -181,7 +394,7 @@ async function onSave() {
       const label = (e.name || e.issuer || ("Imported" + Math.random().toString(36).slice(2,6))).trim();
       
       // Duplicate detection
-      if (vault[label]) {
+      if (currentWS.vault[label]) {
         if (!confirm(`Profile "${label}" already exists. Overwrite?`)) {
           skipped++;
           continue;
@@ -189,8 +402,11 @@ async function onSave() {
         overwritten++;
       }
       
-      vault[label] = {
-        secret: e.secret.replace(/\s+/g, ""),
+      const cleanSecret = e.secret.replace(/\s+/g, "");
+      const encryptedSecret = await CryptoHelper.encrypt(cleanSecret, sessionPassword);
+
+      currentWS.vault[label] = {
+        secret: encryptedSecret,
         digits: e.digits || 6,
         period: e.period || 30,
         algo:   (e.algo || "SHA1").toUpperCase(),
@@ -201,10 +417,11 @@ async function onSave() {
       imported++;
     }
     
-    await chrome.storage.local.set({ vault });
+    await chrome.storage.local.set({ workspaces });
 
     // Auto-add to profileMap if room available
-    await autoAddToProfileMap(vault);
+    await autoAddToProfileMap(currentWS, null);
+    await chrome.storage.local.set({ workspaces });
 
     const msg = `Imported ${imported} entr${imported !== 1 ? "ies" : "y"}${overwritten > 0 ? `, overwritten ${overwritten}` : ""}${skipped > 0 ? `, skipped ${skipped}` : ""}.`;
     setMsg(msg);
@@ -240,31 +457,34 @@ async function onSave() {
   const period = Math.max(15, Math.min(60, Number(periodEl.value || parsed.period || 30)));
   const algo   = (algoEl.value || parsed.algo || "SHA1").toUpperCase();
 
-  const { vault = {} } = await chrome.storage.local.get(["vault"]);
-
-  if (vault[key] && !confirm(`Overwrite existing profile "${key}"?`)) return;
+  if (currentWS.vault[key] && !confirm(`Overwrite existing profile "${key}" in workspace "${activeWorkspace}"?`)) return;
   
-  vault[key] = {
-    secret: parsed.secret.replace(/\s+/g, ""),
+  const cleanSecret = parsed.secret.replace(/\s+/g, "");
+  const encryptedSecret = await CryptoHelper.encrypt(cleanSecret, sessionPassword);
+
+  currentWS.vault[key] = {
+    secret: encryptedSecret,
     digits, period, algo,
     label:     (labelEl?.value || "").trim() || key,
     selector:  (selectorEl?.value || "").trim() || null,
     autoSubmit: !!(autoEl && autoEl.checked)
   };
 
-  await chrome.storage.local.set({ vault });
+  await chrome.storage.local.set({ workspaces });
 
   // Auto-add to profileMap if room available
-  await autoAddToProfileMap(vault, key);
+  await autoAddToProfileMap(currentWS, key);
+  await chrome.storage.local.set({ workspaces });
 
-  setMsg(`Saved ${key}.`);
+  setMsg(`Saved ${key} to ${activeWorkspace}.`);
   await refreshList();
   clearForm();
 }
 
 // ====== Import / Export ======
 async function onExport() {
-  const data = await chrome.storage.local.get(["vault","profileMap"]);
+  const { workspaces, activeWorkspace } = await chrome.storage.local.get(["workspaces", "activeWorkspace"]);
+  const data = workspaces[activeWorkspace];
   
   // Validate export data
   if (!data.vault || Object.keys(data.vault).length === 0) {
@@ -276,7 +496,7 @@ async function onExport() {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `autom8ed_totp_vault_${timestamp}.json`;
+  a.download = `mfa_vault_${activeWorkspace}_${timestamp}.json`;
   a.click();
   URL.revokeObjectURL(url);
   setMsg("Exported successfully.");
@@ -286,6 +506,14 @@ async function onImportFile() {
   const file = fileEl.files?.[0];
   if (!file) return;
   
+  if (!sessionPassword) {
+    sessionPassword = prompt("Vault will be encrypted. Set Master Password for imported data:");
+    if (!sessionPassword) return;
+  }
+
+  const { workspaces, activeWorkspace } = await chrome.storage.local.get(["workspaces", "activeWorkspace"]);
+  const currentWS = workspaces[activeWorkspace];
+
   try {
     const text = await file.text();
     const obj = JSON.parse(text);
@@ -295,7 +523,7 @@ async function onImportFile() {
       return setMsg("Invalid vault format. Missing 'vault' object.", true);
     }
     
-    // Validate each entry
+    // Validate and encrypt each entry
     let validCount = 0;
     const validVault = {};
     for (const [name, entry] of Object.entries(obj.vault)) {
@@ -303,12 +531,16 @@ async function onImportFile() {
         console.warn(`[!] Entry "${name}" missing secret, skipping.`);
         continue;
       }
-      if (!isValidBase32(entry.secret)) {
-        console.warn(`[!] Entry "${name}" has invalid Base32 secret, skipping.`);
-        continue;
+      
+      let secretToStore = entry.secret;
+      
+      // If secret is plain-text Base32, encrypt it
+      if (isValidBase32(entry.secret) && entry.secret.length < 40) {
+         secretToStore = await CryptoHelper.encrypt(entry.secret.replace(/\s+/g, ""), sessionPassword);
       }
+
       validVault[name] = {
-        secret: entry.secret,
+        secret: secretToStore,
         digits: entry.digits || 6,
         period: entry.period || 30,
         algo: (entry.algo || "SHA1").toUpperCase(),
@@ -323,18 +555,17 @@ async function onImportFile() {
       return setMsg("No valid entries found in import file.", true);
     }
 
-    const current = await chrome.storage.local.get(["vault","profileMap"]);
-    const merged = { ...current.vault, ...validVault };
-    const nextPM = Array.isArray(obj.profileMap) ? obj.profileMap : (current.profileMap || []);
+    currentWS.vault = { ...currentWS.vault, ...validVault };
+    if (Array.isArray(obj.profileMap)) {
+      currentWS.profileMap = [...new Set([...(currentWS.profileMap || []), ...obj.profileMap])];
+    }
 
-    await chrome.storage.local.set({
-      vault: merged,
-      profileMap: nextPM
-    });
+    await chrome.storage.local.set({ workspaces });
 
     // Auto-seed profileMap if empty
-    if (!Array.isArray(nextPM) || nextPM.length === 0) {
-      await chrome.storage.local.set({ profileMap: Object.keys(merged).slice(0,4) });
+    if (!Array.isArray(currentWS.profileMap) || currentWS.profileMap.length === 0) {
+      currentWS.profileMap = Object.keys(currentWS.vault).slice(0,4);
+      await chrome.storage.local.set({ workspaces });
     }
 
     setMsg(`Imported ${validCount} valid entr${validCount !== 1 ? "ies" : "y"}.`);
@@ -350,8 +581,8 @@ async function onImportFile() {
 function setMsg(t, isErr=false) {
   if (!msgEl) return;
   msgEl.textContent = t;
-  msgEl.className = isErr ? "warn" : "ok";
-  setTimeout(() => { if (msgEl) { msgEl.textContent = ""; msgEl.className = ""; } }, 3000);
+  msgEl.className = "message " + (isErr ? "warn" : "ok");
+  setTimeout(() => { if (msgEl) { msgEl.textContent = ""; msgEl.className = "message"; } }, 3000);
 }
 
 // Base32 validation
@@ -361,23 +592,20 @@ function isValidBase32(s) {
 }
 
 // Auto-add to profileMap if < 4 slots
-async function autoAddToProfileMap(vault, newKey = null) {
-  const { profileMap = [] } = await chrome.storage.local.get(["profileMap"]);
-  
-  if (!Array.isArray(profileMap)) {
-    await chrome.storage.local.set({ profileMap: Object.keys(vault).slice(0,4) });
+async function autoAddToProfileMap(currentWS, newKey = null) {
+  if (!Array.isArray(currentWS.profileMap)) {
+    currentWS.profileMap = Object.keys(currentWS.vault).slice(0,4);
     return;
   }
   
   // Add new key if room available
-  if (newKey && !profileMap.includes(newKey) && profileMap.length < 4) {
-    profileMap.push(newKey);
-    await chrome.storage.local.set({ profileMap });
+  if (newKey && !currentWS.profileMap.includes(newKey) && currentWS.profileMap.length < 4) {
+    currentWS.profileMap.push(newKey);
   }
   
   // Seed if empty
-  if (profileMap.length === 0) {
-    await chrome.storage.local.set({ profileMap: Object.keys(vault).slice(0,4) });
+  if (currentWS.profileMap.length === 0) {
+    currentWS.profileMap = Object.keys(currentWS.vault).slice(0,4);
   }
 }
 

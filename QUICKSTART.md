@@ -1,4 +1,4 @@
-# 🚀 Quick Start Guide - Autom8ed TOTP v4.5
+# 🚀 Quick Start Guide - Autom8ed TOTP v4.6
 
 ## Installation Steps
 
@@ -7,7 +7,7 @@ The extension needs icon files. You have two options:
 
 **Option A: Use existing icons**
 - Copy `icon*.png` files from `autom8ed-MFA_Working` folder
-- Paste into `Chrome-MFA-v4.5` folder
+- Paste into `Chrome-MFA-v4.5-Sonnet` folder
 
 **Option B: Skip icons (extension will still work)**
 - Chrome will show warnings but extension functions normally
@@ -19,7 +19,7 @@ The extension needs icon files. You have two options:
 2. Navigate to: `chrome://extensions/`
 3. Enable **Developer mode** (toggle in top-right corner)
 4. Click **"Load unpacked"** button
-5. Browse to and select: `\Chrome-MFA-v4.5`
+5. Browse to and select: `C:\Users\Joel\Documents\GitHub\autom8ed-tools\Chrome-MFA-v4.5-Sonnet`
 6. Click **"Select Folder"**
 
 ✅ Extension should now appear in your toolbar!
@@ -79,12 +79,12 @@ The extension needs icon files. You have two options:
 
 **Extension folder:**
 ```
-\Chrome-MFA-v4.5
+C:\Users\Joel\Documents\GitHub\autom8ed-tools\Chrome-MFA-v4.5-Sonnet
 ```
 
 **Your old working extension:**
 ```
-\autom8ed-MFA_Working
+C:\Users\Joel\Documents\GitHub\autom8ed-tools\autom8ed-MFA_Working
 ```
 
 **Icons you can copy from old extension:**
@@ -115,7 +115,7 @@ The extension needs icon files. You have two options:
 
 ---
 
-## What Makes v4.5 Special?
+## What Makes v4.6 Special?
 
 ✅ **Smart label extraction** - Parses URIs automatically  
 ✅ **Base32 validation** - Won't save invalid secrets  

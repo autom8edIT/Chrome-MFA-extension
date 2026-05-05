@@ -1,19 +1,99 @@
-/* popup.js — Autom8ed TOTP Popup (v4.5)
-   - Loads top 4 profiles from profileMap
+/* popup.js — Autom8ed TOTP Popup (v4.6 - Opus Edition)
+   - Loads profiles from profileMap with configurable slot count
    - Generates TOTP codes on demand
    - Sends code + profile data to content script for injection
+   - "More Accounts" drawer for overflow profiles
 */
 
 "use strict";
 
 let vault = {};
 let profileMap = [];
+let workspaces = {};
+let activeWorkspace = "Default";
+let slotCount = 4;
+let masterPassword = "";
+const MAX_SLOTS = 20;
+const MIN_SLOTS = 1;
 
 // Load profiles on popup open
 document.addEventListener("DOMContentLoaded", async () => {
-  const data = await chrome.storage.local.get(["vault", "profileMap"]);
-  vault = data.vault || {};
-  profileMap = data.profileMap || [];
+  const data = await chrome.storage.local.get(["vault", "profileMap", "workspaces", "activeWorkspace", "popupSlots"]);
+  
+  // Migration Check
+  if (data.vault && !data.workspaces) {
+    workspaces = { "Default": { vault: data.vault, profileMap: data.profileMap || [] } };
+    activeWorkspace = "Default";
+    await chrome.storage.local.set({ workspaces, activeWorkspace });
+    await chrome.storage.local.remove(["vault", "profileMap"]);
+  } else {
+    workspaces = data.workspaces || { "Default": { vault: {}, profileMap: [] } };
+    activeWorkspace = data.activeWorkspace || "Default";
+  }
+
+  const currentWS = workspaces[activeWorkspace] || { vault: {}, profileMap: [] };
+  vault = currentWS.vault || {};
+  profileMap = currentWS.profileMap || [];
+  slotCount = Math.max(1, Math.min(20, data.popupSlots || 4));
+
+  // Populate switcher
+  const switcher = document.getElementById("workspaceSwitcher");
+  switcher.innerHTML = "";
+  Object.keys(workspaces).sort().forEach(ws => {
+    const opt = document.createElement("option");
+    opt.value = ws;
+    opt.textContent = ws;
+    if (ws === activeWorkspace) opt.selected = true;
+    switcher.appendChild(opt);
+  });
+
+  switcher.addEventListener("change", async () => {
+    activeWorkspace = switcher.value;
+    const wsData = workspaces[activeWorkspace];
+    vault = wsData.vault;
+    profileMap = wsData.profileMap;
+    await chrome.storage.local.set({ activeWorkspace });
+    renderProfiles();
+  });
+
+  // Check if vault is empty
+  if (Object.keys(vault).length === 0) {
+    document.getElementById("unlockScreen").style.display = "none";
+    document.getElementById("vaultContent").style.display = "block";
+    renderProfiles();
+  }
+
+  document.getElementById("unlockBtn").addEventListener("click", onUnlock);
+  document.getElementById("masterPassword").addEventListener("keypress", (e) => {
+    if (e.key === "Enter") onUnlock();
+  });
+
+  document.getElementById("slotCount").value = slotCount;
+
+  document.getElementById("slotMinus").addEventListener("click", async () => {
+    if (slotCount > MIN_SLOTS) {
+      slotCount--;
+      document.getElementById("slotCount").value = slotCount;
+      await chrome.storage.local.set({ popupSlots: slotCount });
+      renderProfiles();
+    }
+  });
+
+  document.getElementById("slotPlus").addEventListener("click", async () => {
+    if (slotCount < MAX_SLOTS) {
+      slotCount++;
+      document.getElementById("slotCount").value = slotCount;
+      await chrome.storage.local.set({ popupSlots: slotCount });
+      renderProfiles();
+    }
+  });
+
+  document.getElementById("moreToggle").addEventListener("click", () => {
+    const toggle = document.getElementById("moreToggle");
+    const list = document.getElementById("moreList");
+    toggle.classList.toggle("open");
+    list.style.display = list.style.display === "block" ? "none" : "block";
+  });
 
   renderProfiles();
   
@@ -21,64 +101,138 @@ document.addEventListener("DOMContentLoaded", async () => {
   setInterval(updateCountdowns, 1000);
 });
 
+async function onUnlock() {
+  const pw = document.getElementById("masterPassword").value;
+  if (!pw) return;
+
+  // Test decryption on first entry
+  const firstKey = Object.keys(vault)[0];
+  if (firstKey) {
+    try {
+      const test = await CryptoHelper.decrypt(vault[firstKey].secret, pw);
+      masterPassword = pw;
+      document.getElementById("unlockScreen").style.display = "none";
+      document.getElementById("vaultContent").style.display = "block";
+      renderProfiles();
+    } catch(e) {
+      showStatus("❌ Invalid Master Password", "error");
+    }
+  } else {
+    // Empty vault
+    masterPassword = pw;
+    document.getElementById("unlockScreen").style.display = "none";
+    document.getElementById("vaultContent").style.display = "block";
+    renderProfiles();
+  }
+}
+
 function renderProfiles() {
   const container = document.getElementById("profileButtons");
+  const moreList = document.getElementById("moreList");
+  const moreToggle = document.getElementById("moreToggle");
   container.innerHTML = "";
+  moreList.innerHTML = "";
 
-  if (profileMap.length === 0 || Object.keys(vault).length === 0) {
+  const allNames = Object.keys(vault);
+
+  if (allNames.length === 0) {
     container.innerHTML = `
       <div class="empty-state">
         <p>📭 No profiles configured</p>
         <a href="manager.html" target="_blank">Create your first profile →</a>
       </div>
     `;
+    moreToggle.style.display = "none";
     return;
   }
 
-  // Show top 4 profiles from profileMap
-  const displayProfiles = profileMap.slice(0, 4);
-  
-  displayProfiles.forEach(name => {
-    const profile = vault[name];
-    if (!profile) return; // Skip if profile deleted but still in map
+  // Quick-access = profiles in profileMap (up to slotCount)
+  const quickAccess = profileMap.filter(n => vault[n]).slice(0, slotCount);
+  const extraProfiles = allNames.filter(n => !quickAccess.includes(n)).sort();
 
-    const btn = document.createElement("button");
-    btn.className = "profile-btn" + (profile.autoSubmit ? " auto" : "");
-    btn.dataset.profileName = name;
+  if (quickAccess.length === 0) {
+    container.innerHTML = `
+      <div class="empty-state">
+        <p>No quick-access profiles selected.</p>
+        <a href="manager.html" target="_blank">⚙️ Select profiles with ★ in Manager</a>
+      </div>
+    `;
+  } else {
+    quickAccess.forEach(name => {
+      container.appendChild(createProfileButton(name, vault[name], false));
+    });
+  }
 
-    const label = document.createElement("span");
-    label.textContent = profile.label || name;
+  // "More Accounts" drawer
+  if (extraProfiles.length > 0) {
+    moreToggle.style.display = "flex";
+    moreToggle.querySelector(".more-count").textContent = `(${extraProfiles.length})`;
+    extraProfiles.forEach(name => {
+      moreList.appendChild(createProfileButton(name, vault[name], true));
+    });
+  } else {
+    moreToggle.style.display = "none";
+  }
+}
 
-    const countdown = document.createElement("span");
-    countdown.className = "countdown";
-    countdown.textContent = getTimeRemaining() + "s";
+function createProfileButton(name, profile, isExtra) {
+  const btn = document.createElement("button");
+  btn.className = "profile-btn" + (profile.selector ? " auto" : "") + (isExtra ? " extra" : "");
+  btn.dataset.profileName = name;
 
-    btn.appendChild(label);
-    btn.appendChild(countdown);
+  const label = document.createElement("span");
+  label.textContent = profile.label || name;
 
-    btn.addEventListener("click", () => handleInject(name, profile));
+  const right = document.createElement("span");
+  right.style.display = "flex";
+  right.style.alignItems = "center";
+  right.style.gap = "8px";
 
-    container.appendChild(btn);
-  });
+  const badge = document.createElement("span");
+  badge.className = "badge";
+  badge.textContent = profile.digits || 6;
+
+  const countdown = document.createElement("span");
+  countdown.className = "countdown";
+  countdown.dataset.period = profile.period || 30;
+  countdown.textContent = getTimeRemaining(profile.period || 30) + "s";
+
+  right.appendChild(badge);
+  right.appendChild(countdown);
+  btn.appendChild(label);
+  btn.appendChild(right);
+
+  btn.addEventListener("click", () => handleInject(name, profile));
+  return btn;
 }
 
 function updateCountdowns() {
-  const remaining = getTimeRemaining();
   document.querySelectorAll(".countdown").forEach(el => {
+    const period = parseInt(el.dataset.period) || 30;
+    const remaining = getTimeRemaining(period);
     el.textContent = remaining + "s";
+    el.style.color = remaining <= 5 ? "#ff4444" : remaining <= 10 ? "#ffaa00" : "";
   });
 }
 
-function getTimeRemaining() {
+function getTimeRemaining(period = 30) {
   const epoch = Math.floor(Date.now() / 1000);
-  return 30 - (epoch % 30);
+  return period - (epoch % period);
 }
 
 async function handleInject(name, profile) {
   try {
+    if (!masterPassword) {
+       showStatus("❌ Vault Locked", "error");
+       return;
+    }
+
+    // Decrypt secret
+    const decryptedSecret = await CryptoHelper.decrypt(profile.secret, masterPassword);
+
     // Generate TOTP code
     const code = await generateTOTP(
-      profile.secret,
+      decryptedSecret,
       profile.digits || 6,
       profile.period || 30,
       profile.algo || "SHA1"

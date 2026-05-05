@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Autom8ed TOTP v4.5</title>
+  <title>Autom8ed TOTP v4.6</title>
   <style>
     * {
       margin: 0;
@@ -139,15 +139,105 @@
       border: 1px solid #cc0000;
       color: #ff6666;
     }
+    /* Slot-count settings bar */
+    .slot-settings {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 6px 10px;
+      background: #262626;
+      border-bottom: 1px solid #333;
+      font-size: 11px;
+      color: #aaa;
+    }
+    .slot-settings button {
+      width: 22px;
+      height: 22px;
+      border: 1px solid #555;
+      background: #333;
+      color: #fff;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      line-height: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .slot-settings button:hover { background: #444; border-color: #888; }
+    .slot-settings input {
+      width: 32px;
+      text-align: center;
+      background: #1e1e1e;
+      border: 1px solid #555;
+      color: #fff;
+      border-radius: 4px;
+      font-size: 12px;
+      padding: 2px;
+    }
+    /* More-accounts drawer */
+    .more-toggle {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      width: 100%;
+      padding: 8px;
+      margin-top: 2px;
+      background: transparent;
+      border: 1px dashed #555;
+      border-radius: 6px;
+      color: #aaa;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .more-toggle:hover { color: #fff; border-color: #888; }
+    .more-toggle .arrow {
+      display: inline-block;
+      transition: transform 0.2s ease;
+    }
+    .more-toggle.open .arrow { transform: rotate(180deg); }
+    .more-list {
+      display: none;
+      padding-top: 6px;
+    }
+    .more-list .profile-btn.extra {
+      background: linear-gradient(135deg, #2a2a2a 0%, #353535 100%);
+      border-color: #444;
+      font-size: 13px;
+      padding: 10px 12px;
+    }
   </style>
 </head>
 <body>
   <header>
-    <h1>🔐 Autom8ed TOTP</h1>
-    <span class="version">v4.5 Sonnet Edition</span>
+    <div style="display:flex; align-items:center; justify-content: space-between;">
+      <h1>🔐 Autom8ed TOTP</h1>
+      <select id="workspaceSwitcher" style="padding: 2px 5px; font-size: 10px; border-radius: 3px; border: 1px solid #0052a3; background: #0066cc; color: #fff; cursor: pointer;">
+        <option value="Default">Default</option>
+      </select>
+    </div>
+    <span class="version">v4.6 Opus Edition</span>
   </header>
 
-  <div id="statusMsg" class="status-msg"></div>
+  <div id="unlockScreen" style="padding: 20px; text-align: center;">
+    <p style="margin-bottom: 15px; font-size: 13px;">🔒 Vault is Locked</p>
+    <input type="password" id="masterPassword" placeholder="Master Password" 
+           style="width: 100%; padding: 10px; border-radius: 4px; border: 1px solid #555; background: #1e1e1e; color: #fff; margin-bottom: 10px;">
+    <button id="unlockBtn" class="profile-btn" style="justify-content: center; background: #0066cc;">Unlock Vault</button>
+  </div>
+
+  <div id="vaultContent" style="display: none;">
+    <div id="statusMsg" class="status-msg"></div>
+
+  <div class="slot-settings">
+    <span>Quick slots:</span>
+    <button id="slotMinus" title="Fewer">−</button>
+    <input id="slotCount" type="text" readonly>
+    <button id="slotPlus" title="More">+</button>
+  </div>
 
   <div id="profileButtons" class="profile-buttons">
     <div class="empty-state">
@@ -155,10 +245,21 @@
     </div>
   </div>
 
+  <div style="padding: 0 10px 6px;">
+    <button id="moreToggle" class="more-toggle">
+      <span>More Accounts</span>
+      <span class="more-count"></span>
+      <span class="arrow">▼</span>
+    </button>
+    <div id="moreList" class="more-list"></div>
+  </div>
+
   <div class="footer">
     <a href="manager.html" target="_blank">⚙️ Manage Profiles</a>
   </div>
+  </div>
 
+  <script src="crypto-helper.js"></script>
   <script src="popup.js"></script>
 </body>
 </html>

@@ -1,10 +1,10 @@
-# 🎉 VERSION 4.5 "VAULT SUPPORT EDITION" - BUILD COMPLETE
+# 🎉 VERSION 4.5 "Opus Edition" - BUILD COMPLETE
 
 ## ✅ Build Summary
 
 **Date**: February 20, 2026  
-**Version**: 4.5.0  
-**Codename**: Vault Edition  
+**Version**: 4.6.0  
+**Codename**: Opus Edition  
 **Status**: READY TO INSTALL  
 
 ---
@@ -113,7 +113,7 @@
 ✅ Google Auth migration decoder  
 ✅ Base32 encoding/decoding  
 
-### New in v4.5 (Sonnet Enhancements)
+### New in v4.6 (Opus Enhancements)
 ✅ All 9 improvements listed above  
 ✅ Live countdown timers in popup  
 ✅ Clipboard auto-copy on click  
@@ -150,7 +150,7 @@ Follow these steps:
 1. Open Chrome → chrome://extensions/
 2. Enable "Developer mode"
 3. Click "Load unpacked"
-4. Select: Path\To\Extension folder
+4. Select: C:\Users\Joel\Documents\GitHub\autom8ed-tools\Chrome-MFA-v4.5-Sonnet
 5. Extension appears in toolbar! 🎉
 ```
 
@@ -232,8 +232,8 @@ If anything doesn't work:
 
 ## 💝 Dedication
 
-**Version 4.5 "Vault Edition"**  
-*In honor of VS Code Agent Mode*
+**Version 4.5 "Opus Edition"**  
+*In honor of Claude Opus 4.6*
 
 Built with attention to detail, implementing every requested feature with proper error handling, validation, and user experience enhancements.
 
@@ -242,6 +242,6 @@ Built with attention to detail, implementing every requested feature with proper
 ---
 
 **Created**: February 20, 2026  
-**For**: Everyone that hate entering MFA codes manually  
-**By**: autom8ed
+**For**: Joel  
+**By**: Claude Opus 4.6  
 **Status**: ✅ PRODUCTION READY
