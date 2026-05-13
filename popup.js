@@ -1,4 +1,4 @@
-/* popup.js — Autom8ed TOTP Popup (v4.6 - Opus Edition)
+/* popup.js — Autom8ed Vault
    - Loads profiles from profileMap with configurable slot count
    - Generates TOTP codes on demand
    - Sends code + profile data to content script for injection
@@ -18,8 +18,18 @@ const MIN_SLOTS = 1;
 
 // Load profiles on popup open
 document.addEventListener("DOMContentLoaded", async () => {
+  chrome.storage.local.get(["theme"]).then(({ theme }) => {
+    if (theme) document.documentElement.setAttribute("data-theme", theme);
+  });
+
   const data = await chrome.storage.local.get(["vault", "profileMap", "workspaces", "activeWorkspace", "popupSlots"]);
-  
+
+  // Try to load master password from session storage
+  const sessionData = await chrome.storage.session.get(["masterPassword"]);
+  if (sessionData.masterPassword) {
+    masterPassword = sessionData.masterPassword;
+  }
+
   // Migration Check
   if (data.vault && !data.workspaces) {
     workspaces = { "Default": { vault: data.vault, profileMap: data.profileMap || [] } };
@@ -56,8 +66,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     renderProfiles();
   });
 
-  // Check if vault is empty
-  if (Object.keys(vault).length === 0) {
+  // Check if vault is empty or we already have the session password
+  if (Object.keys(vault).length === 0 || masterPassword) {
     document.getElementById("unlockScreen").style.display = "none";
     document.getElementById("vaultContent").style.display = "block";
     renderProfiles();
@@ -96,7 +106,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   });
 
   renderProfiles();
-  
+
   // Update countdown timer every second
   setInterval(updateCountdowns, 1000);
 });
@@ -111,15 +121,17 @@ async function onUnlock() {
     try {
       const test = await CryptoHelper.decrypt(vault[firstKey].secret, pw);
       masterPassword = pw;
+      await chrome.storage.session.set({ masterPassword: pw });
       document.getElementById("unlockScreen").style.display = "none";
       document.getElementById("vaultContent").style.display = "block";
       renderProfiles();
-    } catch(e) {
+    } catch (e) {
       showStatus("❌ Invalid Master Password", "error");
     }
   } else {
     // Empty vault
     masterPassword = pw;
+    await chrome.storage.session.set({ masterPassword: pw });
     document.getElementById("unlockScreen").style.display = "none";
     document.getElementById("vaultContent").style.display = "block";
     renderProfiles();
@@ -223,8 +235,8 @@ function getTimeRemaining(period = 30) {
 async function handleInject(name, profile) {
   try {
     if (!masterPassword) {
-       showStatus("❌ Vault Locked", "error");
-       return;
+      showStatus("❌ Vault Locked", "error");
+      return;
     }
 
     // Decrypt secret
@@ -240,23 +252,33 @@ async function handleInject(name, profile) {
 
     // Copy to clipboard
     await navigator.clipboard.writeText(code);
-    
+
     // Show success message
     showStatus(`✅ ${code} copied to clipboard!`, "success");
 
     // Try to inject into active tab
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
     if (tab?.id) {
-      chrome.tabs.sendMessage(tab.id, {
-        type: "INJECT_TOTP",
-        code: code,
-        selector: profile.selector || null,
-        autoSubmit: !!profile.autoSubmit,
-        profileName: name
-      }).catch(err => {
-        console.log("[Popup] Content script not ready:", err);
-        // Silent fail - code is already in clipboard
-      });
+      try {
+        // Inject script file into all frames
+        await chrome.scripting.executeScript({
+          target: { tabId: tab.id, allFrames: true },
+          files: ["injector.js"]
+        });
+
+        // Call the inject function directly in all frames
+        await chrome.scripting.executeScript({
+          target: { tabId: tab.id, allFrames: true },
+          func: (code, selector, autoSubmit, profileName) => {
+            if (typeof window.autom8edInjectCode === 'function') {
+              window.autom8edInjectCode(code, selector, autoSubmit, profileName);
+            }
+          },
+          args: [code, profile.selector || null, !!profile.autoSubmit, name]
+        });
+      } catch (err) {
+        console.log("[Popup] Failed to inject script:", err);
+      }
     }
   } catch (e) {
     showStatus(`❌ Error: ${e.message}`, "error");
@@ -277,9 +299,9 @@ function showStatus(msg, type) {
 async function generateTOTP(secret, digits = 6, period = 30, algo = "SHA1") {
   const keyBytes = base32ToBytes(secret);
   const timeBytes = getTimeBuffer(period);
-  
-  const hashAlgo = algo.toUpperCase() === "SHA256" ? "SHA-256" : 
-                   algo.toUpperCase() === "SHA512" ? "SHA-512" : "SHA-1";
+
+  const hashAlgo = algo.toUpperCase() === "SHA256" ? "SHA-256" :
+    algo.toUpperCase() === "SHA512" ? "SHA-512" : "SHA-1";
 
   const cryptoKey = await crypto.subtle.importKey(
     "raw",
@@ -292,11 +314,11 @@ async function generateTOTP(secret, digits = 6, period = 30, algo = "SHA1") {
   const sig = await crypto.subtle.sign("HMAC", cryptoKey, timeBytes);
   const bytes = new Uint8Array(sig);
   const offset = bytes[bytes.length - 1] & 0xf;
-  
+
   const binary = ((bytes[offset] & 0x7f) << 24) |
-                 ((bytes[offset + 1] & 0xff) << 16) |
-                 ((bytes[offset + 2] & 0xff) << 8) |
-                 (bytes[offset + 3] & 0xff);
+    ((bytes[offset + 1] & 0xff) << 16) |
+    ((bytes[offset + 2] & 0xff) << 8) |
+    (bytes[offset + 3] & 0xff);
 
   const mod = Math.pow(10, digits);
   const code = (binary % mod).toString().padStart(digits, '0');
@@ -306,19 +328,19 @@ async function generateTOTP(secret, digits = 6, period = 30, algo = "SHA1") {
 function base32ToBytes(base32) {
   const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
   const cleaned = base32.replace(/\s+/g, "").replace(/=+$/, "").toUpperCase();
-  
+
   let bits = "";
   for (const char of cleaned) {
     const val = alphabet.indexOf(char);
     if (val === -1) throw new Error(`Invalid Base32 character: ${char}`);
     bits += val.toString(2).padStart(5, '0');
   }
-  
+
   const bytes = [];
   for (let i = 0; i + 8 <= bits.length; i += 8) {
     bytes.push(parseInt(bits.slice(i, i + 8), 2));
   }
-  
+
   return new Uint8Array(bytes);
 }
 

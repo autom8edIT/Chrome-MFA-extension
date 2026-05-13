@@ -47,7 +47,7 @@ const CryptoHelper = {
     const salt = crypto.getRandomValues(new Uint8Array(this.SALT_LEN));
     const iv = crypto.getRandomValues(new Uint8Array(this.IV_LEN));
     const key = await this.deriveKey(password, salt);
-    
+
     const enc = new TextEncoder();
     const encrypted = await crypto.subtle.encrypt(
       { name: "AES-GCM", iv: iv },
@@ -70,7 +70,7 @@ const CryptoHelper = {
   async decrypt(base64Data, password) {
     try {
       const combined = new Uint8Array(atob(base64Data).split("").map(c => c.charCodeAt(0)));
-      
+
       const salt = combined.slice(0, this.SALT_LEN);
       const iv = combined.slice(this.SALT_LEN, this.SALT_LEN + this.IV_LEN);
       const ciphertext = combined.slice(this.SALT_LEN + this.IV_LEN);

@@ -2,29 +2,17 @@
   "manifest_version": 3,
   "name": "Autom8ed Vault: Secure TOTP Manager",
   "short_name": "Autom8ed Vault",
-  "version": "4.6.0",
+  "version": "1.0.0",
   "description": "A secure, local-first TOTP manager with AES-GCM encryption, multi-workspace support, and auto-injection.",
   "permissions": [
     "storage",
     "scripting",
     "tabs",
     "activeTab",
-    "clipboardWrite",
-    "notifications"
+    "clipboardWrite"
   ],
-  "host_permissions": [
+  "optional_host_permissions": [
     "<all_urls>"
-  ],
-  "content_scripts": [
-    {
-      "matches": [
-        "<all_urls>"
-      ],
-      "js": [
-        "injector.js"
-      ],
-      "run_at": "document_idle"
-    }
   ],
   "icons": {
     "16": "icon16.png",

@@ -1,4 +1,73 @@
-/* styles.css — Autom8ed TOTP Manager Styles (v4.6) */
+/* styles.css — Autom8ed Vault */
+
+:root {
+  /* Easily customizable theme variables */
+  --bg-gradient-start: #1a1a1a;
+  --bg-gradient-end: #2d2d2d;
+  --text-color: #f0f0f0;
+
+  /* Primary header & button colors */
+  --primary-start: #1a1a1a;
+  --primary-end: #0a0a0a;
+  --primary-border: #333333;
+  --primary-shadow: rgba(0, 0, 0, 0.4);
+
+  --primary-hover-start: #2a2a2a;
+  --primary-hover-end: #1a1a1a;
+
+  /* Accent color (links, borders, subtitles) */
+  --accent-color: #888888;
+
+  /* Input fields */
+  --input-bg: #222222;
+  --input-border: #444444;
+  --input-text: #ffffff;
+}
+
+:root[data-theme="gruvbox"] {
+  --bg-gradient-start: #282828;
+  --bg-gradient-end: #3c3836;
+  --text-color: #ebdbb2;
+  --primary-start: #3c3836;
+  --primary-end: #282828;
+  --primary-border: #504945;
+  --primary-shadow: rgba(29, 32, 33, 0.5);
+  --primary-hover-start: #504945;
+  --primary-hover-end: #3c3836;
+  --accent-color: #d79921;
+  --input-bg: #3c3836;
+  --input-border: #504945;
+  --input-text: #ebdbb2;
+}
+
+:root[data-theme="blue"] {
+  --primary-start: #0066cc;
+  --primary-end: #0052a3;
+  --primary-border: #0052a3;
+  --primary-shadow: rgba(0, 102, 204, 0.3);
+  --primary-hover-start: #0077dd;
+  --primary-hover-end: #0063b4;
+  --accent-color: #0099ff;
+  --input-bg: #222222;
+  --input-border: #444444;
+  --input-text: #ffffff;
+}
+
+:root[data-theme="flashbang"] {
+  --bg-gradient-start: #ffffff;
+  --bg-gradient-end: #f4f4f5;
+  --text-color: #18181b;
+  --primary-start: #f4f4f5;
+  --primary-end: #e4e4e7;
+  --primary-border: #d4d4d8;
+  --primary-shadow: rgba(0, 0, 0, 0.1);
+  --primary-hover-start: #e4e4e7;
+  --primary-hover-end: #d4d4d8;
+  --accent-color: #2563eb;
+  --input-bg: #ffffff;
+  --input-border: #cccccc;
+  --input-text: #111111;
+}
 
 * {
   margin: 0;
@@ -7,8 +76,8 @@
 }
 
 body {
-  background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
-  color: #f0f0f0;
+  background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
+  color: var(--text-color);
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   line-height: 1.6;
   min-height: 100vh;
@@ -22,12 +91,13 @@ body {
 
 /* ====== Header ====== */
 header {
-  background: linear-gradient(135deg, #0066cc 0%, #0052a3 100%);
+  background: linear-gradient(135deg, var(--primary-start) 0%, var(--primary-end) 100%);
   padding: 30px;
   border-radius: 12px;
   margin-bottom: 30px;
   text-align: center;
-  box-shadow: 0 4px 20px rgba(0, 102, 204, 0.3);
+  box-shadow: 0 4px 20px var(--primary-shadow);
+  border: 1px solid var(--primary-border);
 }
 
 header h1 {
@@ -60,10 +130,10 @@ section {
 }
 
 section h2 {
-  color: #0099ff;
+  color: var(--text-color);
   margin-bottom: 20px;
   font-size: 20px;
-  border-bottom: 2px solid #0099ff;
+  border-bottom: 2px solid var(--accent-color);
   padding-bottom: 8px;
 }
 
@@ -95,16 +165,17 @@ label {
 
 input[type="text"],
 input[type="number"],
+input[type="password"],
 textarea,
 select {
   width: 100%;
-  padding: 12px;
-  background: #1e1e1e;
-  border: 1px solid #444;
+  padding: 10px;
   border-radius: 6px;
-  color: #f0f0f0;
-  font-size: 14px;
+  border: 1px solid var(--input-border);
+  background: var(--input-bg);
+  color: var(--input-text);
   font-family: inherit;
+  font-size: 14px;
   transition: all 0.2s ease;
 }
 
@@ -184,11 +255,12 @@ small {
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #0066cc 0%, #0052a3 100%);
+  background: linear-gradient(135deg, var(--primary-start) 0%, var(--primary-end) 100%);
+  border: 1px solid var(--primary-border);
 }
 
 .btn-primary:hover {
-  background: linear-gradient(135deg, #0077dd 0%, #0063b4 100%);
+  background: linear-gradient(135deg, var(--primary-hover-start) 0%, var(--primary-hover-end) 100%);
 }
 
 .btn-secondary {

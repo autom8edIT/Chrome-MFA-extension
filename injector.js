@@ -1,4 +1,4 @@
-/* injector.js — Autom8ed TOTP Content Script (v4.5)
+/* injector.js — Autom8ed Vault Content Script
    - Receives TOTP codes from popup
    - Injects into specified selector or common MFA fields
    - Auto-submits if configured
@@ -7,17 +7,21 @@
 
 "use strict";
 
-// Listen for injection commands from popup
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  if (message.type === "INJECT_TOTP") {
-    injectCode(message.code, message.selector, message.autoSubmit, message.profileName);
-    sendResponse({ status: "injected" });
-  }
-  return true;
-});
+// Prevent multiple initializations in the same frame
+if (!window.autom8edInjectorReady) {
+  window.autom8edInjectorReady = true;
 
-async function injectCode(code, customSelector, autoSubmit, profileName) {
-  console.log(`[Autom8ed v4.5] Injecting TOTP for profile: ${profileName}`);
+  // Listen for injection commands from popup
+  chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    if (message.type === "INJECT_TOTP") {
+      window.autom8edInjectCode(message.code, message.selector, message.autoSubmit, message.profileName);
+      sendResponse({ status: "injected" });
+    }
+    return true;
+  });
+
+  window.autom8edInjectCode = async function(code, customSelector, autoSubmit, profileName) {
+  console.log(`[Autom8ed Vault] Injecting TOTP for profile: ${profileName}`);
 
   // Selectors to try (custom first, then common patterns)
   const selectors = [
@@ -67,7 +71,7 @@ async function injectCode(code, customSelector, autoSubmit, profileName) {
     targetInput.dispatchEvent(new Event('input', { bubbles: true }));
     targetInput.dispatchEvent(new Event('change', { bubbles: true }));
     targetInput.dispatchEvent(new Event('blur', { bubbles: true }));
-    
+
     // Also trigger keyboard events for picky sites
     targetInput.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true }));
     targetInput.dispatchEvent(new KeyboardEvent('keyup', { bubbles: true }));
@@ -171,4 +175,5 @@ function showInjectionOverlay() {
   }, 2000);
 }
 
-console.log("[Autom8ed v4.5] Content script loaded and ready.");
+  console.log("[Autom8ed v4.6] Content script loaded and ready.");
+}

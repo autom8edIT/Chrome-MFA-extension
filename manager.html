@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,19 +8,30 @@
   <link rel="stylesheet" href="styles.css">
   <script src="crypto-helper.js"></script>
 </head>
+
 <body>
   <div class="container">
     <header>
-      <h1>🔐 Autom8ed TOTP Manager <span class="version">v4.6</span></h1>
-      <p class="subtitle">Opus Edition - Full-Featured TOTP Vault</p>
+      <h1>🔐 Autom8ed Vault</h1>
+      <p class="subtitle">Secure offline TOTP management with intelligent auto-injection.</p>
     </header>
 
     <section class="workspace-section">
       <div style="display:flex; align-items:center; justify-content: space-between; gap: 15px; flex-wrap: wrap;">
         <div style="display:flex; align-items:center; gap: 10px;">
           <label for="workspaceSelect" style="font-weight: 600;">Active Workspace:</label>
-          <select id="workspaceSelect" style="padding: 8px; border-radius: 4px; border: 1px solid #555; background: #1e1e1e; color: #fff; min-width: 150px;">
+          <select id="workspaceSelect"
+            style="padding: 8px; border-radius: 4px; border: 1px solid var(--input-border, #555); background: var(--input-bg, #1e1e1e); color: var(--input-text, #fff); min-width: 150px;">
             <option value="Default">Default</option>
+          </select>
+
+          <label for="themeSelect" style="font-weight: 600; margin-left: 15px;">Theme:</label>
+          <select id="themeSelect"
+            style="padding: 8px; border-radius: 4px; border: 1px solid var(--input-border, #555); background: var(--input-bg, #1e1e1e); color: var(--input-text, #fff);">
+            <option value="black">Black (Night)</option>
+            <option value="gruvbox">Gruvbox Dark</option>
+            <option value="blue">Classic Blue</option>
+            <option value="flashbang">Flashbang (Light)</option>
           </select>
         </div>
         <div class="button-group-inline">
@@ -32,9 +44,9 @@
 
     <section class="form-section">
       <h2>Add / Edit Profile</h2>
-      
+
       <div id="currentEdit" class="edit-indicator" style="display:none;"></div>
-      
+
       <div class="form-group">
         <label for="secret">Secret (Base32 or otpauth:// URI):</label>
         <textarea id="secret" rows="3" placeholder="Paste Base32 secret or otpauth:// URI here..."></textarea>
@@ -80,6 +92,18 @@
         </label>
       </div>
 
+      <div class="form-group checkbox-group" style="margin-top: 10px;">
+        <label>
+          <input type="checkbox" id="autoInjectLoad">
+          ⚡ Enable Auto-Inject on Page Load
+        </label>
+      </div>
+      <div class="form-group" id="autoInjectUrlGroup" style="display: none; margin-top: 10px; margin-left: 24px;">
+        <label for="autoInjectUrl">Target URL for auto-injection:</label>
+        <input type="text" id="autoInjectUrl" placeholder="e.g., https://weblogin.uu.se/*">
+        <small style="color: #ffaa00;">Requires granting permission for this specific site.</small>
+      </div>
+
       <div class="button-group">
         <button id="save" class="btn btn-primary">💾 Save Profile</button>
         <button id="clearBtn" class="btn btn-secondary">🗑️ Clear Form</button>
@@ -96,12 +120,13 @@
           <button id="importBtn" class="btn btn-info">📥 Import Vault</button>
         </div>
       </div>
-      <small style="display:block;margin-bottom:12px;color:#888;">Click ★ to select which accounts appear in the popup quick-access area. Sorted A–Z.</small>
-      
+      <small style="display:block;margin-bottom:12px;color:#888;">Click ★ to select which accounts appear in the popup
+        quick-access area. Sorted A–Z.</small>
+
       <div id="list" class="profile-list">
         <div style="color:#888;padding:20px;text-align:center;">Loading...</div>
       </div>
-      
+
       <input type="file" id="file" accept=".json" style="display:none;">
     </section>
 
@@ -119,11 +144,13 @@
     </section>
 
     <footer>
-      <p>🎉 Version 4.6 "Opus Edition" - Enhanced by Claude Opus 4.6</p>
-      <p>Features: ★ Quick-access selection • A–Z sorting • Auto-label extraction • Base32 validation • Import validation • Duplicate detection</p>
+      <p>🚀 Version 1.0.0 - Stable Release | Created by Autom8ed, Enhanced by AntiGravity</p>
+      <p>Features: ★ Quick-access selection • A–Z sorting • Auto-label extraction • Base32 validation • Import
+        validation • Duplicate detection</p>
     </footer>
   </div>
 
   <script src="manager.js"></script>
 </body>
+
 </html>

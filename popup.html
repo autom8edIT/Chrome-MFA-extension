@@ -1,47 +1,119 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
-  <title>Autom8ed TOTP v4.6</title>
+  <title>Autom8ed Vault</title>
   <style>
+    :root {
+      /* Easily customizable theme variables */
+      --text-color: #f0f0f0;
+      --bg-gradient-start: #1e1e1e;
+      --bg-gradient-end: #2d2d2d;
+
+      /* Primary header & accent colors */
+      --primary-start: #1a1a1a;
+      --primary-end: #0a0a0a;
+      --primary-border: #333333;
+      --primary-badge: #444444;
+
+      /* Button colors */
+      --btn-bg-start: #333333;
+      --btn-bg-end: #444444;
+      --btn-border: #555555;
+
+      /* Active / Highlight elements */
+      --accent-color: #00cc66;
+      /* green for auto indicator */
+      --link-color: #888888;
+
+      /* Input elements */
+      --input-bg: #1e1e1e;
+      --input-border: #555555;
+    }
+
+    :root[data-theme="gruvbox"] {
+      --bg-gradient-start: #282828;
+      --bg-gradient-end: #3c3836;
+      --text-color: #ebdbb2;
+      --primary-start: #3c3836;
+      --primary-end: #282828;
+      --primary-border: #504945;
+      --primary-badge: #b16286;
+      --btn-bg-start: #504945;
+      --btn-bg-end: #3c3836;
+      --btn-border: #665c54;
+      --accent-color: #d79921;
+      --link-color: #d3869b;
+      --input-bg: #282828;
+      --input-border: #504945;
+    }
+
+    :root[data-theme="blue"] {
+      --primary-start: #0066cc;
+      --primary-end: #0052a3;
+      --primary-border: #0052a3;
+      --primary-badge: #0066cc;
+      --accent-color: #00cc66;
+      --input-bg: #1e1e1e;
+      --input-border: #555555;
+    }
+
+    :root[data-theme="flashbang"] {
+      --bg-gradient-start: #ffffff;
+      --bg-gradient-end: #f5f5f5;
+      --text-color: #111111;
+      --primary-start: #f0f0f0;
+      --primary-end: #e0e0e0;
+      --primary-border: #cccccc;
+      --primary-badge: #dddddd;
+      --btn-bg-start: #ffffff;
+      --btn-bg-end: #f0f0f0;
+      --btn-border: #cccccc;
+      --accent-color: #ff3333;
+      /* High contrast red/orange for auto indicator */
+      --link-color: #0055cc;
+      --input-bg: #ffffff;
+      --input-border: #cccccc;
+    }
+
     * {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
     }
+
     body {
       width: 300px;
-      background: linear-gradient(135deg, #1e1e1e 0%, #2d2d2d 100%);
-      color: #f0f0f0;
+      background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
+      color: var(--text-color);
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       padding: 0;
       margin: 0;
     }
+
     header {
-      background: linear-gradient(135deg, #0066cc 0%, #0052a3 100%);
+      background: linear-gradient(135deg, var(--primary-start) 0%, var(--primary-end) 100%);
       padding: 15px;
       text-align: center;
-      border-bottom: 2px solid #0052a3;
+      border-bottom: 2px solid var(--primary-border);
     }
+
     h1 {
       font-size: 16px;
       margin: 0;
       font-weight: 600;
     }
-    .version {
-      font-size: 10px;
-      opacity: 0.8;
-      display: block;
-      margin-top: 3px;
-    }
+
     .profile-buttons {
       padding: 10px;
     }
+
     .profile-btn {
       width: 100%;
-      background: linear-gradient(135deg, #333 0%, #444 100%);
-      color: #fff;
-      border: 1px solid #555;
+      background: linear-gradient(135deg, var(--btn-bg-start) 0%, var(--btn-bg-end) 100%);
+      color: var(--text-color);
+      border: 1px solid var(--btn-border);
       padding: 12px;
       margin-bottom: 8px;
       border-radius: 6px;
@@ -55,34 +127,40 @@
       position: relative;
       overflow: hidden;
     }
+
     .profile-btn:hover {
-      background: linear-gradient(135deg, #444 0%, #555 100%);
+      background: linear-gradient(135deg, var(--btn-bg-end) 0%, var(--btn-border) 100%);
       border-color: #888;
       transform: translateY(-1px);
-      box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
     }
+
     .profile-btn:active {
       transform: translateY(0);
-      box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
     }
+
     .profile-btn .badge {
-      background: #0066cc;
-      color: #fff;
+      background: var(--primary-badge);
+      color: var(--text-color);
       padding: 2px 6px;
       border-radius: 3px;
       font-size: 11px;
       font-weight: 600;
     }
+
     .profile-btn.auto {
-      border-left: 3px solid #00cc66;
+      border-left: 3px solid var(--accent-color);
     }
+
     .countdown {
       font-size: 11px;
       opacity: 0.7;
       margin-left: auto;
     }
+
     .code-display {
-      background: #2d2d2d;
+      background: var(--bg-gradient-end);
       padding: 8px;
       border-radius: 4px;
       text-align: center;
@@ -90,37 +168,45 @@
       font-size: 18px;
       letter-spacing: 2px;
       margin-top: 5px;
-      border: 1px solid #444;
+      border: 1px solid var(--btn-border);
       display: none;
     }
+
     .footer {
       padding: 10px;
       text-align: center;
-      border-top: 1px solid #333;
+      border-top: 1px solid var(--primary-border);
     }
+
     .footer a {
-      color: #0099ff;
+      color: var(--link-color);
       text-decoration: none;
       font-size: 12px;
       font-weight: 500;
     }
+
     .footer a:hover {
       text-decoration: underline;
+      color: #bbbbbb;
     }
+
     .empty-state {
       padding: 30px 20px;
       text-align: center;
       color: #888;
     }
+
     .empty-state p {
       margin-bottom: 15px;
       font-size: 13px;
     }
+
     .empty-state a {
-      color: #0099ff;
+      color: var(--link-color);
       text-decoration: none;
       font-weight: 500;
     }
+
     .status-msg {
       padding: 8px;
       margin: 10px;
@@ -129,16 +215,19 @@
       text-align: center;
       display: none;
     }
+
     .status-msg.success {
       background: #00cc6644;
       border: 1px solid #00cc66;
       color: #00ff88;
     }
+
     .status-msg.error {
       background: #cc000044;
       border: 1px solid #cc0000;
       color: #ff6666;
     }
+
     /* Slot-count settings bar */
     .slot-settings {
       display: flex;
@@ -146,17 +235,18 @@
       justify-content: center;
       gap: 6px;
       padding: 6px 10px;
-      background: #262626;
-      border-bottom: 1px solid #333;
+      background: var(--bg-gradient-end);
+      border-bottom: 1px solid var(--primary-border);
       font-size: 11px;
-      color: #aaa;
+      color: var(--link-color);
     }
+
     .slot-settings button {
       width: 22px;
       height: 22px;
-      border: 1px solid #555;
-      background: #333;
-      color: #fff;
+      border: 1px solid var(--btn-border);
+      background: var(--btn-bg-start);
+      color: var(--text-color);
       border-radius: 4px;
       cursor: pointer;
       font-size: 14px;
@@ -165,17 +255,23 @@
       align-items: center;
       justify-content: center;
     }
-    .slot-settings button:hover { background: #444; border-color: #888; }
+
+    .slot-settings button:hover {
+      background: var(--btn-bg-end);
+      border-color: var(--text-color);
+    }
+
     .slot-settings input {
       width: 32px;
       text-align: center;
-      background: #1e1e1e;
-      border: 1px solid #555;
-      color: #fff;
+      background: var(--input-bg);
+      border: 1px solid var(--input-border);
+      color: var(--text-color);
       border-radius: 4px;
       font-size: 12px;
       padding: 2px;
     }
+
     /* More-accounts drawer */
     .more-toggle {
       display: none;
@@ -186,23 +282,33 @@
       padding: 8px;
       margin-top: 2px;
       background: transparent;
-      border: 1px dashed #555;
+      border: 1px dashed var(--btn-border);
       border-radius: 6px;
-      color: #aaa;
+      color: var(--link-color);
       font-size: 12px;
       cursor: pointer;
       transition: all 0.2s ease;
     }
-    .more-toggle:hover { color: #fff; border-color: #888; }
+
+    .more-toggle:hover {
+      color: var(--text-color);
+      border-color: var(--text-color);
+    }
+
     .more-toggle .arrow {
       display: inline-block;
       transition: transform 0.2s ease;
     }
-    .more-toggle.open .arrow { transform: rotate(180deg); }
+
+    .more-toggle.open .arrow {
+      transform: rotate(180deg);
+    }
+
     .more-list {
       display: none;
       padding-top: 6px;
     }
+
     .more-list .profile-btn.extra {
       background: linear-gradient(135deg, #2a2a2a 0%, #353535 100%);
       border-color: #444;
@@ -211,55 +317,58 @@
     }
   </style>
 </head>
+
 <body>
   <header>
-    <div style="display:flex; align-items:center; justify-content: space-between;">
-      <h1>🔐 Autom8ed TOTP</h1>
-      <select id="workspaceSwitcher" style="padding: 2px 5px; font-size: 10px; border-radius: 3px; border: 1px solid #0052a3; background: #0066cc; color: #fff; cursor: pointer;">
+    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; gap: 10px;">
+      <h1>🔐 Autom8ed Vault</h1>
+      <select id="workspaceSwitcher"
+        style="padding: 4px 8px; font-size: 11px; border-radius: 4px; border: 1px solid var(--primary-border); background: var(--primary-badge); color: var(--text-color); cursor: pointer; text-align: center;">
         <option value="Default">Default</option>
       </select>
     </div>
-    <span class="version">v4.6 Opus Edition</span>
   </header>
 
   <div id="unlockScreen" style="padding: 20px; text-align: center;">
     <p style="margin-bottom: 15px; font-size: 13px;">🔒 Vault is Locked</p>
-    <input type="password" id="masterPassword" placeholder="Master Password" 
-           style="width: 100%; padding: 10px; border-radius: 4px; border: 1px solid #555; background: #1e1e1e; color: #fff; margin-bottom: 10px;">
-    <button id="unlockBtn" class="profile-btn" style="justify-content: center; background: #0066cc;">Unlock Vault</button>
+    <input type="password" id="masterPassword" placeholder="Master Password"
+      style="width: 100%; padding: 10px; border-radius: 4px; border: 1px solid var(--input-border); background: var(--input-bg); color: var(--text-color); margin-bottom: 10px;">
+    <button id="unlockBtn" class="profile-btn" style="justify-content: center; background: var(--primary-badge);">Unlock
+      Vault</button>
   </div>
 
   <div id="vaultContent" style="display: none;">
     <div id="statusMsg" class="status-msg"></div>
 
-  <div class="slot-settings">
-    <span>Quick slots:</span>
-    <button id="slotMinus" title="Fewer">−</button>
-    <input id="slotCount" type="text" readonly>
-    <button id="slotPlus" title="More">+</button>
-  </div>
-
-  <div id="profileButtons" class="profile-buttons">
-    <div class="empty-state">
-      <p>⏳ Loading profiles...</p>
+    <div class="slot-settings">
+      <span>Quick slots:</span>
+      <button id="slotMinus" title="Fewer">−</button>
+      <input id="slotCount" type="text" readonly>
+      <button id="slotPlus" title="More">+</button>
     </div>
-  </div>
 
-  <div style="padding: 0 10px 6px;">
-    <button id="moreToggle" class="more-toggle">
-      <span>More Accounts</span>
-      <span class="more-count"></span>
-      <span class="arrow">▼</span>
-    </button>
-    <div id="moreList" class="more-list"></div>
-  </div>
+    <div id="profileButtons" class="profile-buttons">
+      <div class="empty-state">
+        <p>⏳ Loading profiles...</p>
+      </div>
+    </div>
 
-  <div class="footer">
-    <a href="manager.html" target="_blank">⚙️ Manage Profiles</a>
-  </div>
+    <div style="padding: 0 10px 6px;">
+      <button id="moreToggle" class="more-toggle">
+        <span>More Accounts</span>
+        <span class="more-count"></span>
+        <span class="arrow">▼</span>
+      </button>
+      <div id="moreList" class="more-list"></div>
+    </div>
+
+    <div class="footer">
+      <a href="manager.html" target="_blank">⚙️ Manage Profiles</a>
+    </div>
   </div>
 
   <script src="crypto-helper.js"></script>
   <script src="popup.js"></script>
 </body>
+
 </html>
