@@ -186,8 +186,7 @@ again so the vault appears.
 
 ## 🙏 Credits
 
-**Created by**: Autom8ed  
-**Enhanced by**: AntiGravity  
+**Created by**: Autom8ed 
 **Version**: 1.0  
 **Date**: May 6, 2026  
 
