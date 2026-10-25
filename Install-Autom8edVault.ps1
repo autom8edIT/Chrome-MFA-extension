@@ -98,8 +98,9 @@ function Select-Browsers($detected, $want) {
     return $picked
 }
 
-function Copy-Extension([string]$Source, [string]$Version) {
-    $dest = Join-Path $installRoot $Version
+function Copy-Extension([string]$Source) {
+    # Chromium derives unpacked IDs from this path; retain the original directory across upgrades.
+    $dest = Join-Path $installRoot "1.0.0"
     New-Item -ItemType Directory -Path $dest -Force | Out-Null
     Get-ChildItem -LiteralPath $Source -File | Where-Object {
         $_.Extension -in @(".js", ".html", ".css", ".png") -or $_.Name -eq "manifest.json"
@@ -132,8 +133,18 @@ function Invoke-BrowserSetup($Browser, $Payload, $Manifest, [string]$Helper) {
         "--name", (ConvertTo-NativeArgument $Manifest.name),
         "--version", (ConvertTo-NativeArgument $Manifest.version)
     )
-    $process = Start-Process -FilePath $Helper -ArgumentList $arguments -NoNewWindow -Wait -PassThru
-    try { return $process.ExitCode }
+    $info = [Diagnostics.ProcessStartInfo]::new()
+    $info.FileName = $Helper
+    $info.Arguments = $arguments -join " "
+    $info.UseShellExecute = $false
+    $info.CreateNoWindow = $true
+    $process = [Diagnostics.Process]::new()
+    $process.StartInfo = $info
+    try {
+        if (-not $process.Start()) { throw "The native installer did not start." }
+        $process.WaitForExit()
+        return $process.ExitCode
+    }
     finally { $process.Dispose() }
 }
 
@@ -196,7 +207,7 @@ function Invoke-Installer {
             throw "The extension manifest has an invalid version or name."
         }
         $helper = Get-InstallerHelper $source
-        $payload = Copy-Extension $source $version
+        $payload = Copy-Extension $source
         return (Install-SelectedBrowsers $targets $payload $manifest $helper)
     } finally {
         try {

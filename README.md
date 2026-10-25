@@ -74,12 +74,13 @@ switch yourself; setup detects that too. Browsers with Developer mode already
 enabled need no additional confirmation.
 
 Setup loads the prepared extension from
-`%LOCALAPPDATA%\Autom8edVault\<version>` and confirms its name, version, source
+`%LOCALAPPDATA%\Autom8edVault\1.0.0` and confirms its name, version, source
 path and enabled state before reporting success. It opens a new setup window
 in the browser's normal profile; choose a profile if the browser asks. Existing
-tabs and vault data are not copied or removed. This installer repair keeps the
-existing versioned directory layout; it does not migrate extension identities
-or vault data.
+tabs and vault data are not copied or removed. The historical directory name
+`1.0.0` is deliberately retained for newer releases, including extension
+version **1.0.1**: Chromium derives unpacked extension IDs from that path.
+This update does not migrate extension identities or vault data.
 
 Keep the interactive Windows desktop and setup window available until setup
 finishes. Cancel is available throughout; waiting is bounded to ten minutes

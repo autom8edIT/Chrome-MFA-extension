@@ -89,6 +89,24 @@ function Run-LiveCase($Browser, [string]$Profile, [string]$Source, [string]$Mode
         $expected = if ($Mode -eq "Cancel") { 130 } elseif ($Mode -eq "InvalidManifest") { 1 } else { 0 }
         if ($process.ExitCode -ne $expected) {
             $diagnostic = @()
+            $registered = @()
+            foreach ($preferencesName in @("Preferences", "Secure Preferences")) {
+                $preferencesPath = Join-Path $Profile ("Default\" + $preferencesName)
+                if (Test-Path -LiteralPath $preferencesPath) {
+                    $preferences = Get-Content -LiteralPath $preferencesPath -Raw | ConvertFrom-Json
+                    if ($preferences.extensions.settings) {
+                        foreach ($setting in $preferences.extensions.settings.PSObject.Properties) {
+                            $registered += [pscustomobject]@{
+                                Id = $setting.Name
+                                Name = $setting.Value.manifest.name
+                                Version = $setting.Value.manifest.version
+                                Path = $setting.Value.path
+                                State = $setting.Value.state
+                            }
+                        }
+                    }
+                }
+            }
             foreach ($testBrowser in @(Get-TestProcesses $Profile | Where-Object { $_.CommandLine -notmatch '--type=' })) {
                 $browserWindow = Find-Window ([int]$testBrowser.ProcessId) "Chrome_WidgetWin_1"
                 if ($browserWindow) {
@@ -100,7 +118,7 @@ function Run-LiveCase($Browser, [string]$Profile, [string]$Source, [string]$Mode
                     }
                 }
             }
-            throw "$($Browser.Name) $Mode failed (exit $($process.ExitCode)): $(Get-Content -LiteralPath $out,$err -Raw) Isolated browser: $($diagnostic | ConvertTo-Json -Compress)"
+            throw "$($Browser.Name) $Mode failed (exit $($process.ExitCode)): $(Get-Content -LiteralPath $out,$err -Raw) Isolated browser: $($diagnostic | ConvertTo-Json -Compress) Registered fixtures: $($registered | ConvertTo-Json -Compress)"
         }
         if ($Mode -in @("Consent", "Cancel") -and -not $confirmed) { throw "The consent control was not exercised." }
         if ($expected -eq 0 -and (Get-Content -LiteralPath $out -Raw) -notmatch "Verified installed and enabled") {
@@ -130,7 +148,7 @@ try {
     [IO.File]::WriteAllText((Join-Path $badSource "manifest.json"), '{"invalid":true}', [Text.UTF8Encoding]::new($false))
     $actualManifest = Get-Content -LiteralPath (Join-Path $PSScriptRoot "manifest.json") -Raw | ConvertFrom-Json
     $script:installRoot = Join-Path $fixture "MFA install target"
-    $actualPayload = Copy-Extension $PSScriptRoot $actualManifest.version
+    $actualPayload = Copy-Extension $PSScriptRoot
     $detectedBrowsers = @(Get-DetectedBrowsers)
     if (-not $detectedBrowsers.Count) { throw "No supported browser is installed for live verification." }
     foreach ($browser in $detectedBrowsers) {

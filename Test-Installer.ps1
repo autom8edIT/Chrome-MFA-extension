@@ -38,9 +38,16 @@ try {
     Copy-Item -LiteralPath (Join-Path $PSScriptRoot "manifest.json"), (Join-Path $PSScriptRoot "popup.js") -Destination $source
     Set-Content -LiteralPath (Join-Path $source "installer-only.cpp") -Value "not an extension asset"
     $script:installRoot = Join-Path $fixture "installed"
-    $payload = Copy-Extension $source "1.0.0"
+    $payload = Copy-Extension $source
     Assert-True (Test-Path -LiteralPath (Join-Path $payload.Dir "manifest.json")) "Extension manifest was not staged."
     Assert-True (-not (Test-Path -LiteralPath (Join-Path $payload.Dir "installer-only.cpp"))) "Installer code leaked into extension assets."
+    Assert-True ($payload.Dir -eq (Join-Path $script:installRoot "1.0.0")) "Setup changed the legacy extension identity path."
+    $upgrade = Get-Content -LiteralPath (Join-Path $source "manifest.json") -Raw | ConvertFrom-Json
+    $upgrade.version = "1.0.2"
+    $upgrade | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath (Join-Path $source "manifest.json")
+    $upgraded = Copy-Extension $source
+    Assert-True ($upgraded.Dir -eq $payload.Dir) "A version update changed the path-derived extension ID."
+    Assert-True ((Get-Content -LiteralPath (Join-Path $upgraded.Dir "manifest.json") -Raw | ConvertFrom-Json).version -eq "1.0.2") "Upgrade did not copy the new manifest."
 
     $script:codes = @{}
     $script:calls = [Collections.Generic.List[string]]::new()
@@ -70,6 +77,23 @@ try {
     $helper = Join-Path $PSScriptRoot "build\installer\autom8ed-installer.exe"
     if (-not (Test-Path -LiteralPath $helper)) { throw "Run Build-Installer.ps1 before installer tests." }
     Set-Item -Path Function:\Invoke-BrowserSetup -Value $nativeInvocation
+    $processFixture = Join-Path $PSScriptRoot "build\installer\installer-process-fixture.exe"
+    $child = $null
+    try {
+        $code = Invoke-BrowserSetup $detected[0] $payload $manifest $processFixture
+        Assert-True ($code -eq 7) "Helper exit status was not preserved."
+        $childId = [int](Get-Content -LiteralPath (Join-Path $payload.Dir "child.pid") -Raw)
+        $child = Get-Process -Id $childId
+        Assert-True ($child.Path -eq $processFixture -and -not $child.HasExited) "Setup waited for the browser descendant to exit."
+    } finally {
+        if ($child) {
+            if (-not $child.HasExited -and $child.Path -eq $processFixture) {
+                Stop-Process -Id $child.Id -Force
+                $child.WaitForExit()
+            }
+            $child.Dispose()
+        }
+    }
     $missingBrowser = [pscustomobject]@{ Name = "Chrome"; Exe = (Join-Path $fixture "missing browser.exe") }
     Assert-True ((Invoke-BrowserSetup $missingBrowser $payload $manifest $helper) -eq 1) "Native process exit status was lost."
     $packageRoot = Join-Path $fixture "autom8ed-mfa"

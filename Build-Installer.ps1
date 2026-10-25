@@ -17,3 +17,8 @@ $installerTools = Split-Path -Parent $vswhere
 & $cmd /d /c "set `"PATH=$installerTools;%PATH%`" && call `"$vcvars`" >nul && cl /nologo /std:c++17 /EHsc /W4 /WX /O2 /MT /DUNICODE /D_UNICODE /Fe:`"$exe`" /Fo:`"$obj`" `"$source`" /link uiautomationcore.lib ole32.lib oleaut32.lib user32.lib gdi32.lib bcrypt.lib"
 if ($LASTEXITCODE -ne 0) { throw "Native installer build failed." }
 Write-Host "Built $exe"
+$fixtureSource = Join-Path $PSScriptRoot "Test-InstallerProcess.cpp"
+$fixtureExe = Join-Path $out "installer-process-fixture.exe"
+$fixtureObj = Join-Path $out "installer-process-fixture.obj"
+& $cmd /d /c "set `"PATH=$installerTools;%PATH%`" && call `"$vcvars`" >nul && cl /nologo /std:c++17 /EHsc /W4 /WX /O2 /MT /Fe:`"$fixtureExe`" /Fo:`"$fixtureObj`" `"$fixtureSource`""
+if ($LASTEXITCODE -ne 0) { throw "Installer process fixture build failed." }
